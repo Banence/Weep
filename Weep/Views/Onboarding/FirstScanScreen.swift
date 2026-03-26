@@ -4,9 +4,14 @@ struct FirstScanScreen: View {
     @Bindable var viewModel: OnboardingViewModel
     let onComplete: () -> Void
 
-    @State private var showManualEntry = false
+    @State private var showCamera = false
     @State private var manualItemName = ""
     @State private var showCelebration = false
+
+    private var showManualEntry: Bool {
+        get { viewModel.firstScanSubView }
+        nonmutating set { viewModel.firstScanSubView = newValue }
+    }
 
     var body: some View {
         Group {
@@ -20,6 +25,19 @@ struct FirstScanScreen: View {
         }
         .animation(.easeInOut(duration: 0.3), value: showManualEntry)
         .animation(.easeInOut(duration: 0.3), value: showCelebration)
+        .fullScreenCover(isPresented: $showCamera) {
+            CameraCaptureView(
+                onComplete: { item in
+                    KitchenStore.shared.addItem(item)
+                    showCamera = false
+                    viewModel.firstItemAdded = true
+                    withAnimation(.easeInOut(duration: 0.3)) { showCelebration = true }
+                },
+                onDismiss: {
+                    showCamera = false
+                }
+            )
+        }
     }
 
     // MARK: - Main
@@ -45,9 +63,23 @@ struct FirstScanScreen: View {
                     Spacer().frame(height: 32)
 
                     VStack(spacing: 10) {
-                        scanOption(title: "Scan a barcode", subtitle: "Point at any product barcode")
-                        scanOption(title: "Snap a photo", subtitle: "Photo of any fruit or vegetable")
-                        scanOption(title: "Add manually", subtitle: "Type in the product name")
+                        scanOption(
+                            icon: "camera.fill",
+                            title: "Snap a photo",
+                            subtitle: "Photo of any product"
+                        ) {
+                            WeepHaptics.light()
+                            showCamera = true
+                        }
+
+                        scanOption(
+                            icon: "pencil.line",
+                            title: "Add manually",
+                            subtitle: "Type in the product name"
+                        ) {
+                            WeepHaptics.light()
+                            withAnimation(.easeInOut(duration: 0.3)) { showManualEntry = true }
+                        }
                     }
                     .staggeredAppear(delay: 0.2)
 
@@ -58,12 +90,20 @@ struct FirstScanScreen: View {
         }
     }
 
-    private func scanOption(title: String, subtitle: String) -> some View {
+    private func scanOption(icon: String, title: String, subtitle: String, action: @escaping () -> Void) -> some View {
         Button {
-            WeepHaptics.light()
-            withAnimation(.easeInOut(duration: 0.3)) { showManualEntry = true }
+            action()
         } label: {
-            HStack {
+            HStack(spacing: 14) {
+                Image(systemName: icon)
+                    .font(.system(size: 18, weight: .medium))
+                    .foregroundColor(WeepColor.accent)
+                    .frame(width: 36, height: 36)
+                    .background(
+                        Circle()
+                            .fill(WeepColor.accentLight)
+                    )
+
                 VStack(alignment: .leading, spacing: 3) {
                     Text(title)
                         .font(WeepFont.bodyMedium(16))
@@ -97,45 +137,34 @@ struct FirstScanScreen: View {
 
     private var manualEntryView: some View {
         VStack(spacing: 0) {
-            ScrollView {
-                VStack(spacing: 0) {
-                    Spacer().frame(height: 80)
+            Spacer()
 
-                    Text("What are you adding?")
-                        .font(WeepFont.headline(22))
-                        .foregroundColor(WeepColor.textPrimary)
-                        .multilineTextAlignment(.center)
-                        .frame(maxWidth: .infinity)
-                        .staggeredAppear(delay: 0.05)
+            VStack(spacing: 24) {
+                Text("What are you adding?")
+                    .font(WeepFont.headline(22))
+                    .foregroundColor(WeepColor.textPrimary)
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: .infinity)
 
-                    Spacer().frame(height: 28)
-
-                    ZStack {
-                        if manualItemName.isEmpty {
-                            Text("e.g. Milk, Bananas, Yogurt")
-                                .font(.system(size: 32, weight: .bold))
-                                .foregroundColor(WeepColor.placeholder)
-                        }
-                        TextField("", text: $manualItemName)
-                            .font(.system(size: 32, weight: .bold))
-                            .foregroundColor(WeepColor.textPrimary)
-                            .multilineTextAlignment(.center)
-                    }
+                VStack(spacing: 12) {
+                    TextField("", text: $manualItemName, prompt:
+                        Text("e.g. Milk, Bananas, Yogurt")
+                            .foregroundStyle(WeepColor.placeholder)
+                    )
+                    .font(.system(size: 28, weight: .bold))
+                    .foregroundStyle(WeepColor.textPrimary)
+                    .tint(WeepColor.accent)
+                    .multilineTextAlignment(.center)
                     .padding(.horizontal, 32)
-                    .staggeredAppear(delay: 0.1)
-
-                    Spacer().frame(height: 12)
 
                     Rectangle()
-                        .fill(WeepColor.divider)
+                        .fill(WeepColor.cardBorder)
                         .frame(height: 1)
                         .padding(.horizontal, 40)
-                        .staggeredAppear(delay: 0.1)
-
-                    Spacer(minLength: 100)
                 }
             }
-            .scrollDismissesKeyboard(.interactively)
+
+            Spacer()
 
             VStack(spacing: 0) {
                 WeepButton(
@@ -143,6 +172,8 @@ struct FirstScanScreen: View {
                     isEnabled: !manualItemName.trimmingCharacters(in: .whitespaces).isEmpty
                 ) {
                     WeepHaptics.success()
+                    let item = FoodItem(name: manualItemName.trimmingCharacters(in: .whitespaces))
+                    KitchenStore.shared.addItem(item)
                     viewModel.firstItemAdded = true
                     withAnimation(.easeInOut(duration: 0.3)) { showCelebration = true }
                 }

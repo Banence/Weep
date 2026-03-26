@@ -15,18 +15,19 @@ struct WeepApp: App {
         }
     }
 
-    /// Clears any stale Clerk session from the Keychain on launch.
-    /// This prevents 404 errors when a session was deleted server-side
-    /// but the local device still has it cached.
+    /// Validates the current session on launch.
+    /// If the session was deleted server-side, signs out locally
+    /// so the user is routed to the sign-in screen.
     private func clearStaleSession() {
         Task {
             do {
                 _ = try await Clerk.shared.auth.getToken()
             } catch {
-                let desc = "\(error)"
-                if desc.contains("resource_not_found") || desc.contains("Session not found") {
-                    try? await Clerk.shared.auth.signOut()
-                }
+                // Session is invalid — force sign out.
+                // Even if signOut() throws (session already gone server-side),
+                // the SDK reconciles its local state from the error response,
+                // setting clerk.user to nil and routing to SignedOutView.
+                try? await Clerk.shared.auth.signOut()
             }
         }
     }

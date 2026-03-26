@@ -47,7 +47,11 @@ struct OnboardingContainerView: View {
             HStack {
                 Button {
                     withAnimation(.easeInOut(duration: 0.3)) {
-                        viewModel.goBack()
+                        if viewModel.firstScanSubView {
+                            viewModel.firstScanSubView = false
+                        } else {
+                            viewModel.goBack()
+                        }
                     }
                 } label: {
                     Image(systemName: "chevron.left")
