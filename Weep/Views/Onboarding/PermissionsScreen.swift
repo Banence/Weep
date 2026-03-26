@@ -59,49 +59,165 @@ struct PermissionsScreen: View {
     }
 }
 
-// MARK: - Camera Permission
+// MARK: - Camera Permission (with illustration)
 
 struct CameraPermissionView: View {
     let onAllow: () -> Void
     let onDefer: () -> Void
 
+    @State private var showScanLine = false
+
     var body: some View {
         VStack(spacing: 0) {
-            ScrollView {
-                VStack(spacing: 0) {
-                    Spacer().frame(height: 80)
+            // Header
+            VStack(spacing: 0) {
+                Spacer().frame(height: 20)
 
-                    Image(systemName: "camera")
-                        .font(.system(size: 44, weight: .light))
-                        .foregroundStyle(WeepColor.iconMuted)
-                        .frame(maxWidth: .infinity)
-                        .staggeredAppear(delay: 0.1)
+                Image(systemName: "camera.viewfinder")
+                    .font(.system(size: 30, weight: .light))
+                    .foregroundStyle(WeepColor.iconMuted)
+                    .frame(maxWidth: .infinity)
+                    .staggeredAppear(delay: 0.1)
 
-                    Spacer().frame(height: 24)
+                Spacer().frame(height: 14)
 
-                    Text("Scan barcodes\ninstantly")
-                        .font(WeepFont.largeTitle(32))
-                        .foregroundColor(WeepColor.textPrimary)
-                        .multilineTextAlignment(.center)
-                        .frame(maxWidth: .infinity)
-                        .staggeredAppear(delay: 0.2)
+                Text("Snap & identify\nyour food")
+                    .font(WeepFont.largeTitle(28))
+                    .foregroundColor(WeepColor.textPrimary)
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: .infinity)
+                    .staggeredAppear(delay: 0.2)
 
-                    Spacer().frame(height: 12)
+                Spacer().frame(height: 8)
 
-                    Text("Weep uses your camera to scan\nbarcodes and identify fresh produce.")
-                        .font(WeepFont.body(16))
-                        .foregroundColor(WeepColor.textSecondary)
-                        .multilineTextAlignment(.center)
-                        .lineSpacing(2)
-                        .frame(maxWidth: .infinity)
-                        .staggeredAppear(delay: 0.3)
-
-                    Spacer(minLength: 100)
-                }
+                Text("Point your camera at any product and\nour AI will identify it instantly.")
+                    .font(WeepFont.body(15))
+                    .foregroundColor(WeepColor.textSecondary)
+                    .multilineTextAlignment(.center)
+                    .lineSpacing(2)
+                    .frame(maxWidth: .infinity)
+                    .staggeredAppear(delay: 0.3)
             }
 
+            Spacer().frame(height: 20)
+
+            // Camera illustration
+            CameraIllustration(showScanLine: showScanLine)
+                .padding(.horizontal, 32)
+                .staggeredAppear(delay: 0.35)
+
+            Spacer()
+
+            // Buttons
             permissionButtons(title: "Allow Camera", onAllow: onAllow, onDefer: onDefer)
-                .staggeredAppear(delay: 0.4)
+        }
+        .onAppear {
+            withAnimation(.easeInOut(duration: 1.5).repeatForever(autoreverses: true).delay(1.0)) {
+                showScanLine = true
+            }
+        }
+    }
+}
+
+// MARK: - Camera Illustration
+
+struct CameraIllustration: View {
+    let showScanLine: Bool
+
+    var body: some View {
+        VStack(spacing: 0) {
+            // Viewfinder
+            ZStack {
+                // Soft background
+                RoundedRectangle(cornerRadius: 20, style: .continuous)
+                    .fill(Color(hex: 0xF0EFEC))
+
+                // Product image
+                AsyncImage(url: URL(string: "https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?w=400&h=300&fit=crop")) { image in
+                    image
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                } placeholder: {
+                    Color(hex: 0xE8E7E3)
+                }
+                .frame(height: 160)
+                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                .padding(8)
+                .opacity(0.85)
+
+                // Viewfinder corners
+                GeometryReader { geo in
+                    let s: CGFloat = 24
+                    let w: CGFloat = 3
+                    let inset: CGFloat = 24
+
+                    ForEach(0..<4, id: \.self) { corner in
+                        let isRight = corner % 2 == 1
+                        let isBottom = corner >= 2
+                        let x = isRight ? geo.size.width - inset : inset
+                        let y = isBottom ? geo.size.height - inset : inset
+
+                        Path { p in
+                            p.move(to: CGPoint(x: x + (isRight ? -s : s), y: y))
+                            p.addLine(to: CGPoint(x: x, y: y))
+                            p.addLine(to: CGPoint(x: x, y: y + (isBottom ? -s : s)))
+                        }
+                        .stroke(Color.white, lineWidth: w)
+                    }
+                }
+
+                // Scan line
+                GeometryReader { geo in
+                    RoundedRectangle(cornerRadius: 1)
+                        .fill(WeepColor.accent)
+                        .frame(width: geo.size.width - 56, height: 2)
+                        .frame(maxWidth: .infinity)
+                        .offset(y: showScanLine ? geo.size.height * 0.65 : geo.size.height * 0.3)
+                        .opacity(0.7)
+                }
+            }
+            .frame(height: 176)
+
+            Spacer().frame(height: 10)
+
+            // Result card
+            HStack(spacing: 12) {
+                AsyncImage(url: URL(string: "https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?w=100&h=100&fit=crop")) { image in
+                    image
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                } placeholder: {
+                    Color(hex: 0xE8E7E3)
+                }
+                .frame(width: 38, height: 38)
+                .clipShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Organic Carrots")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(WeepColor.textPrimary)
+
+                    Text("Added · Expires in ~7 days")
+                        .font(.system(size: 12))
+                        .foregroundColor(WeepColor.textSecondary)
+                }
+
+                Spacer()
+
+                Image(systemName: "checkmark.circle.fill")
+                    .font(.system(size: 20))
+                    .foregroundColor(WeepColor.accent)
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 12)
+            .background(
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .fill(WeepColor.cardBackground)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .strokeBorder(WeepColor.cardBorder, lineWidth: 1)
+            )
         }
     }
 }
@@ -162,7 +278,7 @@ struct NotificationPermissionView: View {
 
             Spacer()
 
-            // Buttons pinned to bottom
+            // Buttons
             permissionButtons(title: "Enable notifications", onAllow: onAllow, onDefer: onDefer)
         }
         .onAppear {
@@ -188,7 +304,7 @@ private func permissionButtons(title: String, onAllow: @escaping () -> Void, onD
     .padding(.bottom, 4)
 }
 
-// MARK: - Phone Illustration
+// MARK: - Phone Illustration (Notifications)
 
 struct PhoneIllustration: View {
     let showNotif1: Bool
@@ -200,7 +316,7 @@ struct PhoneIllustration: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // Notifications area inside the phone
+            // Notifications
             VStack(spacing: 6) {
                 if showNotif1 {
                     notifBanner(
@@ -273,7 +389,6 @@ struct PhoneIllustration: View {
 
     private func notifBanner(title: String, body: String, time: String, imageURL: String) -> some View {
         HStack(alignment: .center, spacing: 10) {
-            // Product image
             AsyncImage(url: URL(string: imageURL)) { image in
                 image
                     .resizable()

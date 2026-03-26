@@ -6,13 +6,11 @@ struct GreetingScreen: View {
 
     private let greetingWords = [
         "Hey", "Hola", "Bonjour", "Ciao", "Hej",
-        "Olá", "Hallo", "Привет", "こんにちは",
-        "안녕", "Merhaba", "Γεια σου", "Здраво",
+        "Hallo", "Merhaba", "Salut", "Aloha",
     ]
 
     @State private var displayedText = ""
-    @State private var cursorVisible = false
-    @State private var cursorBlinking = false
+    @State private var isTyping = false
     @State private var showSubtitle = false
     @State private var showButton = false
     @State private var animationTask: Task<Void, Never>?
@@ -28,16 +26,9 @@ struct GreetingScreen: View {
                         .font(.system(size: 38, weight: .bold))
                         .foregroundColor(WeepColor.textPrimary)
 
-                    Rectangle()
-                        .fill(WeepColor.accent)
-                        .frame(width: 2.5, height: 34)
-                        .opacity(cursorVisible ? (cursorBlinking ? 0 : 1) : 0)
-                        .animation(
-                            cursorBlinking
-                                ? .easeInOut(duration: 0.53).repeatForever(autoreverses: true)
-                                : .easeInOut(duration: 0.15),
-                            value: cursorBlinking
-                        )
+                    if isTyping {
+                        CursorView()
+                    }
                 }
                 .frame(minHeight: 48)
 
@@ -68,25 +59,14 @@ struct GreetingScreen: View {
 
     private func startCycle() {
         animationTask = Task { @MainActor in
-            // Show cursor with a brief blink before typing
-            await wait(300)
+            await wait(400)
             guard alive else { return }
-            cursorVisible = true
-            cursorBlinking = true
-            await wait(600)
-            guard alive else { return }
-
-            // Stop blinking, start typing
-            cursorBlinking = false
-            await wait(100)
-            guard alive else { return }
+            isTyping = true
 
             // Type first greeting
             await typeString("\(greetingWords[0]), \(name)")
             guard alive else { return }
 
-            // Pause with blinking cursor
-            cursorBlinking = true
             await wait(400)
             guard alive else { return }
 
@@ -102,24 +82,13 @@ struct GreetingScreen: View {
                 for i in 1..<greetingWords.count {
                     guard alive else { return }
 
-                    // Stop blinking, start deleting
-                    cursorBlinking = false
-                    await wait(80)
-                    guard alive else { return }
-
                     await deleteAll()
                     guard alive else { return }
-
-                    // Brief pause with cursor
-                    await wait(200)
+                    await wait(150)
                     guard alive else { return }
 
-                    // Type new greeting
                     await typeString("\(greetingWords[i]), \(name)")
                     guard alive else { return }
-
-                    // Blink and hold
-                    cursorBlinking = true
                     await wait(2500)
                 }
             }
@@ -153,5 +122,23 @@ struct GreetingScreen: View {
     @MainActor
     private func wait(_ ms: UInt64) async {
         try? await Task.sleep(nanoseconds: ms * 1_000_000)
+    }
+}
+
+// MARK: - Cursor
+
+private struct CursorView: View {
+    @State private var visible = true
+
+    var body: some View {
+        Rectangle()
+            .fill(WeepColor.accent)
+            .frame(width: 2.5, height: 34)
+            .opacity(visible ? 1 : 0)
+            .onAppear {
+                withAnimation(.easeInOut(duration: 0.5).repeatForever(autoreverses: true)) {
+                    visible = false
+                }
+            }
     }
 }

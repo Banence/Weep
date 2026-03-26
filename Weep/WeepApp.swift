@@ -1,20 +1,33 @@
 import SwiftUI
-
-// TODO: Add Clerk SPM package and uncomment:
-// import ClerkKit
+import ClerkKit
 
 @main
 struct WeepApp: App {
     init() {
-        // TODO: Configure Clerk when SPM package is added:
-        // Clerk.configure(publishableKey: "pk_live_xxxxx")
+        Clerk.configure(publishableKey: "pk_test_Y2hhbXBpb24tdnVsdHVyZS0xMy5jbGVyay5hY2NvdW50cy5kZXYk")
+        clearStaleSession()
     }
 
     var body: some Scene {
         WindowGroup {
             RootView()
-            // TODO: Inject Clerk environment when SDK is added:
-            // .environment(Clerk.shared)
+                .environment(Clerk.shared)
+        }
+    }
+
+    /// Clears any stale Clerk session from the Keychain on launch.
+    /// This prevents 404 errors when a session was deleted server-side
+    /// but the local device still has it cached.
+    private func clearStaleSession() {
+        Task {
+            do {
+                _ = try await Clerk.shared.auth.getToken()
+            } catch {
+                let desc = "\(error)"
+                if desc.contains("resource_not_found") || desc.contains("Session not found") {
+                    try? await Clerk.shared.auth.signOut()
+                }
+            }
         }
     }
 }

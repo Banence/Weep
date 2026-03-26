@@ -1,6 +1,8 @@
 import SwiftUI
+import ClerkKit
 
 struct OnboardingContainerView: View {
+    @Environment(Clerk.self) private var clerk
     @State private var viewModel = OnboardingViewModel()
     var onComplete: () -> Void
 
@@ -10,7 +12,7 @@ struct OnboardingContainerView: View {
                 .ignoresSafeArea()
 
             VStack(spacing: 0) {
-                if viewModel.currentStep != .welcome {
+                if viewModel.currentStep != .welcome && viewModel.currentStep != .greeting {
                     topBar
                         .transition(.opacity)
                 }
@@ -27,15 +29,21 @@ struct OnboardingContainerView: View {
         .animation(.easeInOut(duration: 0.3), value: viewModel.currentStep)
         .onAppear {
             viewModel.restoreFromUserDefaults()
+
+            // If user already has a Clerk session, skip sign-up and go to greeting or beyond
+            if clerk.user != nil {
+                if viewModel.currentStep == .welcome || viewModel.currentStep == .signUp {
+                    viewModel.displayName = clerk.user?.firstName ?? clerk.user?.username ?? "there"
+                    viewModel.currentStep = .greeting
+                }
+            }
         }
     }
 
     private var topBar: some View {
         ZStack {
-            // Centered progress bar
             OnboardingProgressBar(progress: viewModel.progress)
 
-            // Back button left, skip right
             HStack {
                 Button {
                     withAnimation(.easeInOut(duration: 0.3)) {
@@ -73,8 +81,8 @@ struct OnboardingContainerView: View {
         switch viewModel.currentStep {
         case .welcome:
             WelcomeScreen { advance() }
-        case .aboutYou:
-            AboutYouScreen(viewModel: viewModel) { advance() }
+        case .signUp:
+            SignUpScreen(viewModel: viewModel) { advance() }
         case .greeting:
             GreetingScreen(name: viewModel.displayName) { advance() }
         case .household:
@@ -103,8 +111,4 @@ struct OnboardingContainerView: View {
             viewModel.advance()
         }
     }
-}
-
-#Preview {
-    OnboardingContainerView(onComplete: {})
 }

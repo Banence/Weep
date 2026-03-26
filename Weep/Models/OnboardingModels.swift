@@ -116,7 +116,7 @@ enum PrimaryGoal: String, CaseIterable, Codable {
 
 enum OnboardingStep: Int, CaseIterable {
     case welcome = 0
-    case aboutYou
+    case signUp
     case greeting
     case household
     case shoppingFrequency
@@ -130,7 +130,7 @@ enum OnboardingStep: Int, CaseIterable {
 
     var canSkip: Bool {
         switch self {
-        case .welcome, .greeting, .permissions, .firstScan: return false
+        case .welcome, .signUp, .greeting, .permissions, .firstScan: return false
         default: return true
         }
     }
