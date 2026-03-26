@@ -1,0 +1,321 @@
+import SwiftUI
+import AVFoundation
+import UserNotifications
+
+struct PermissionsScreen: View {
+    @Bindable var viewModel: OnboardingViewModel
+    let onContinue: () -> Void
+
+    var body: some View {
+        Group {
+            if viewModel.permissionSubStep == 0 {
+                CameraPermissionView(
+                    onAllow: { requestCameraPermission() },
+                    onDefer: {
+                        WeepHaptics.light()
+                        withAnimation(.easeInOut(duration: 0.3)) {
+                            viewModel.permissionSubStep = 1
+                        }
+                    }
+                )
+                .transition(.asymmetric(
+                    insertion: .move(edge: .trailing).combined(with: .opacity),
+                    removal: .move(edge: .leading).combined(with: .opacity)
+                ))
+            } else {
+                NotificationPermissionView(
+                    onAllow: { requestNotificationPermission() },
+                    onDefer: { onContinue() }
+                )
+                .transition(.asymmetric(
+                    insertion: .move(edge: .trailing).combined(with: .opacity),
+                    removal: .move(edge: .leading).combined(with: .opacity)
+                ))
+            }
+        }
+        .animation(.easeInOut(duration: 0.3), value: viewModel.permissionSubStep)
+    }
+
+    private func requestCameraPermission() {
+        WeepHaptics.light()
+        AVCaptureDevice.requestAccess(for: .video) { granted in
+            DispatchQueue.main.async {
+                viewModel.cameraPermissionGranted = granted
+                withAnimation(.easeInOut(duration: 0.3)) {
+                    viewModel.permissionSubStep = 1
+                }
+            }
+        }
+    }
+
+    private func requestNotificationPermission() {
+        WeepHaptics.light()
+        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound]) { granted, _ in
+            DispatchQueue.main.async {
+                viewModel.notificationPermissionGranted = granted
+                onContinue()
+            }
+        }
+    }
+}
+
+// MARK: - Camera Permission
+
+struct CameraPermissionView: View {
+    let onAllow: () -> Void
+    let onDefer: () -> Void
+
+    var body: some View {
+        VStack(spacing: 0) {
+            ScrollView {
+                VStack(spacing: 0) {
+                    Spacer().frame(height: 80)
+
+                    Image(systemName: "camera")
+                        .font(.system(size: 44, weight: .light))
+                        .foregroundStyle(WeepColor.iconMuted)
+                        .frame(maxWidth: .infinity)
+                        .staggeredAppear(delay: 0.1)
+
+                    Spacer().frame(height: 24)
+
+                    Text("Scan barcodes\ninstantly")
+                        .font(WeepFont.largeTitle(32))
+                        .foregroundColor(WeepColor.textPrimary)
+                        .multilineTextAlignment(.center)
+                        .frame(maxWidth: .infinity)
+                        .staggeredAppear(delay: 0.2)
+
+                    Spacer().frame(height: 12)
+
+                    Text("Weep uses your camera to scan\nbarcodes and identify fresh produce.")
+                        .font(WeepFont.body(16))
+                        .foregroundColor(WeepColor.textSecondary)
+                        .multilineTextAlignment(.center)
+                        .lineSpacing(2)
+                        .frame(maxWidth: .infinity)
+                        .staggeredAppear(delay: 0.3)
+
+                    Spacer(minLength: 100)
+                }
+            }
+
+            permissionButtons(title: "Allow Camera", onAllow: onAllow, onDefer: onDefer)
+                .staggeredAppear(delay: 0.4)
+        }
+    }
+}
+
+// MARK: - Notification Permission
+
+struct NotificationPermissionView: View {
+    let onAllow: () -> Void
+    let onDefer: () -> Void
+
+    @State private var showNotif1 = false
+    @State private var showNotif2 = false
+    @State private var showNotif3 = false
+
+    var body: some View {
+        VStack(spacing: 0) {
+            // Header
+            VStack(spacing: 0) {
+                Spacer().frame(height: 20)
+
+                Image(systemName: "bell.fill")
+                    .font(.system(size: 30, weight: .light))
+                    .foregroundStyle(WeepColor.iconMuted)
+                    .symbolEffect(.wiggle.byLayer, options: .repeat(.periodic(delay: 5.0)))
+                    .frame(maxWidth: .infinity)
+                    .staggeredAppear(delay: 0.1)
+
+                Spacer().frame(height: 14)
+
+                Text("Never let food\ngo to waste")
+                    .font(WeepFont.largeTitle(28))
+                    .foregroundColor(WeepColor.textPrimary)
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: .infinity)
+                    .staggeredAppear(delay: 0.2)
+
+                Spacer().frame(height: 8)
+
+                Text("Get updates on expiring items and\nreminders to use your food in time.")
+                    .font(WeepFont.body(15))
+                    .foregroundColor(WeepColor.textSecondary)
+                    .multilineTextAlignment(.center)
+                    .lineSpacing(2)
+                    .frame(maxWidth: .infinity)
+                    .staggeredAppear(delay: 0.3)
+            }
+
+            Spacer().frame(height: 16)
+
+            // Phone with notifications inside
+            PhoneIllustration(
+                showNotif1: showNotif1,
+                showNotif2: showNotif2,
+                showNotif3: showNotif3
+            )
+            .padding(.horizontal, 28)
+            .staggeredAppear(delay: 0.35)
+
+            Spacer()
+
+            // Buttons pinned to bottom
+            permissionButtons(title: "Enable notifications", onAllow: onAllow, onDefer: onDefer)
+        }
+        .onAppear {
+            withAnimation(.easeOut(duration: 0.45).delay(0.8)) { showNotif1 = true }
+            withAnimation(.easeOut(duration: 0.45).delay(1.5)) { showNotif2 = true }
+            withAnimation(.easeOut(duration: 0.45).delay(2.2)) { showNotif3 = true }
+        }
+    }
+}
+
+// MARK: - Shared buttons
+
+private func permissionButtons(title: String, onAllow: @escaping () -> Void, onDefer: @escaping () -> Void) -> some View {
+    VStack(spacing: 0) {
+        WeepButton(title: title) { onAllow() }
+            .padding(.horizontal, 24)
+
+        Button("Maybe later") { onDefer() }
+            .font(WeepFont.body(15))
+            .foregroundColor(WeepColor.textSecondary)
+            .frame(height: 52)
+    }
+    .padding(.bottom, 4)
+}
+
+// MARK: - Phone Illustration
+
+struct PhoneIllustration: View {
+    let showNotif1: Bool
+    let showNotif2: Bool
+    let showNotif3: Bool
+
+    private let gridColor = Color(hex: 0xEAE9E5)
+    private let phoneColor = Color(hex: 0xF3F2EF)
+
+    var body: some View {
+        VStack(spacing: 0) {
+            // Notifications area inside the phone
+            VStack(spacing: 6) {
+                if showNotif1 {
+                    notifBanner(
+                        title: "Your yogurt expires tomorrow",
+                        body: "Don't let it go to waste — maybe a smoothie?",
+                        time: "now",
+                        imageURL: "https://images.unsplash.com/photo-1488477181946-6428a0291777?w=100&h=100&fit=crop"
+                    )
+                    .transition(.asymmetric(
+                        insertion: .move(edge: .top).combined(with: .opacity),
+                        removal: .opacity
+                    ))
+                }
+
+                if showNotif2 {
+                    notifBanner(
+                        title: "Milk expires today",
+                        body: "Use it in your morning coffee or cereal",
+                        time: "1h ago",
+                        imageURL: "https://images.unsplash.com/photo-1563636619-e9143da7973b?w=100&h=100&fit=crop"
+                    )
+                    .transition(.asymmetric(
+                        insertion: .move(edge: .top).combined(with: .opacity),
+                        removal: .opacity
+                    ))
+                }
+
+                if showNotif3 {
+                    notifBanner(
+                        title: "Bananas are going brown",
+                        body: "Make banana bread before they go bad!",
+                        time: "2m ago",
+                        imageURL: "https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=100&h=100&fit=crop"
+                    )
+                    .transition(.asymmetric(
+                        insertion: .move(edge: .top).combined(with: .opacity),
+                        removal: .opacity
+                    ))
+                }
+            }
+            .padding(.horizontal, 10)
+            .padding(.top, 14)
+            .padding(.bottom, 8)
+
+            // App grid
+            VStack(spacing: 10) {
+                ForEach(0..<3, id: \.self) { row in
+                    HStack(spacing: 10) {
+                        ForEach(0..<4, id: \.self) { _ in
+                            RoundedRectangle(cornerRadius: 13, style: .continuous)
+                                .fill(gridColor)
+                                .aspectRatio(1, contentMode: .fit)
+                        }
+                    }
+                    .opacity(row == 2 ? 0.4 : 0.7)
+                }
+            }
+            .padding(.horizontal, 14)
+            .padding(.bottom, 14)
+        }
+        .background(
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .fill(phoneColor)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .strokeBorder(Color(hex: 0xE2E1DD), lineWidth: 1)
+        )
+    }
+
+    private func notifBanner(title: String, body: String, time: String, imageURL: String) -> some View {
+        HStack(alignment: .center, spacing: 10) {
+            // Product image
+            AsyncImage(url: URL(string: imageURL)) { image in
+                image
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+            } placeholder: {
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .fill(WeepColor.accent.opacity(0.1))
+                    .overlay(
+                        Image(systemName: "leaf.fill")
+                            .font(.system(size: 14, weight: .medium))
+                            .foregroundColor(WeepColor.accent)
+                    )
+            }
+            .frame(width: 36, height: 36)
+            .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+
+            VStack(alignment: .leading, spacing: 2) {
+                HStack(alignment: .firstTextBaseline) {
+                    Text(title)
+                        .font(.system(size: 12.5, weight: .semibold))
+                        .foregroundColor(WeepColor.textPrimary)
+                        .lineLimit(1)
+
+                    Spacer(minLength: 4)
+
+                    Text(time)
+                        .font(.system(size: 11))
+                        .foregroundColor(WeepColor.textSecondary)
+                }
+
+                Text(body)
+                    .font(.system(size: 11.5))
+                    .foregroundColor(WeepColor.textSecondary)
+                    .lineLimit(1)
+            }
+        }
+        .padding(.horizontal, 11)
+        .padding(.vertical, 10)
+        .background(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .fill(.white)
+                .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 2)
+        )
+    }
+}
