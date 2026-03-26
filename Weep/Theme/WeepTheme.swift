@@ -24,9 +24,9 @@ enum WeepColor {
     static let buttonPrimary = Color(hex: 0x1A1A1A)
     static let buttonPrimaryText = Color.white
 
-    // Accent — emerald green (selected states, toggles, tags)
-    static let accent = Color(hex: 0x00A86B)
-    static let accentLight = Color(hex: 0xE0F5EC)
+    // Accent — vibrant green (selected states, toggles, tags)
+    static let accent = Color(hex: 0x34C759)
+    static let accentLight = Color(hex: 0xDAF5E4)
 
     // Secondary — warm terracotta (secondary highlights)
     static let secondary = Color(hex: 0xE07A5F)

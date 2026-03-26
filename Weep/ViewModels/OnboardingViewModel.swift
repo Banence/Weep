@@ -47,6 +47,7 @@ class OnboardingViewModel {
     // MARK: - Screen 10: First Scan
 
     var firstItemAdded: Bool = false
+    var firstScanSubView: Bool = false
 
     // MARK: - Completion
 
