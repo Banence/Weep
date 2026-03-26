@@ -7,20 +7,12 @@ struct WelcomeScreen: View {
         VStack(spacing: 0) {
             Spacer()
 
-            // Icon
-            Image(systemName: "leaf.fill")
-                .font(.system(size: 40, weight: .light))
-                .foregroundStyle(WeepColor.iconMuted)
-                .staggeredAppear(delay: 0.1)
-
-            Spacer().frame(height: 24)
-
             // Headline
             Text("Welcome to Weep")
                 .font(WeepFont.largeTitle(28))
                 .foregroundColor(WeepColor.textPrimary)
                 .multilineTextAlignment(.center)
-                .staggeredAppear(delay: 0.2)
+                .staggeredAppear(delay: 0.1)
 
             Spacer().frame(height: 12)
 
@@ -29,7 +21,7 @@ struct WelcomeScreen: View {
                 .foregroundColor(WeepColor.textSecondary)
                 .multilineTextAlignment(.center)
                 .lineSpacing(3)
-                .staggeredAppear(delay: 0.3)
+                .staggeredAppear(delay: 0.25)
 
             Spacer()
 
@@ -39,7 +31,7 @@ struct WelcomeScreen: View {
                     onContinue()
                 }
             }
-            .staggeredAppear(delay: 0.5)
+            .staggeredAppear(delay: 0.45)
         }
     }
 }
