@@ -64,7 +64,7 @@ struct GreetingScreen: View {
             isTyping = true
 
             // Type first greeting
-            await typeString("\(greetingWords[0]), \(name)")
+            await typeString(greetingText(greetingWords[0]))
             guard alive else { return }
 
             await wait(400)
@@ -87,12 +87,16 @@ struct GreetingScreen: View {
                     await wait(150)
                     guard alive else { return }
 
-                    await typeString("\(greetingWords[i]), \(name)")
+                    await typeString(greetingText(greetingWords[i]))
                     guard alive else { return }
                     await wait(2500)
                 }
             }
         }
+    }
+
+    private func greetingText(_ greeting: String) -> String {
+        name.isEmpty ? "\(greeting)!" : "\(greeting), \(name)"
     }
 
     private var alive: Bool { !Task.isCancelled }

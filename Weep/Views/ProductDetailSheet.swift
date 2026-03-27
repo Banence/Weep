@@ -48,6 +48,7 @@ struct ProductDetailSheet: View {
 
             topBar
         }
+        .tint(nil)
         .alert("Delete \(item.name)?", isPresented: $showDeleteAlert) {
             Button("Cancel", role: .cancel) {}
             Button("Delete", role: .destructive) {
@@ -70,8 +71,6 @@ struct ProductDetailSheet: View {
                     .frame(width: 40, height: 40)
                     .background(Circle().fill(.ultraThinMaterial).environment(\.colorScheme, .dark))
             }
-
-            Spacer()
 
             Spacer()
 
@@ -230,7 +229,7 @@ struct ProductDetailSheet: View {
                 HStack(spacing: 10) {
                     if let p = n.protein { macroCard(label: "Protein", value: p, color: WeepColor.alertRed, icon: "flame.fill") }
                     if let c = n.totalCarbohydrates { macroCard(label: "Carbs", value: c, color: WeepColor.alertAmber, icon: "leaf.fill") }
-                    if let f = n.totalFat { macroCard(label: "Fat", value: f, color: Color(hex: 0x5B9BD5), icon: "drop.fill") }
+                    if let f = n.totalFat { macroCard(label: "Fat", value: f, color: WeepColor.macroFat, icon: "drop.fill") }
                 }
                 .padding(.horizontal, 24)
             }
@@ -411,7 +410,6 @@ struct ProductDetailSheet: View {
                         )
                         .datePickerStyle(.compact)
                         .tint(WeepColor.accent)
-                        .environment(\.colorScheme, .light)
                         .padding(.horizontal, 16)
                         .padding(.vertical, 10)
                     }
@@ -644,6 +642,13 @@ struct ProductDetailSheet: View {
 
 // MARK: - Flow Layout
 
+private struct FlowHeightPreferenceKey: PreferenceKey {
+    static var defaultValue: CGFloat = .zero
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = max(value, nextValue())
+    }
+}
+
 struct FlowLayoutDetail<Item: Hashable, Content: View>: View {
     let items: [Item]
     let content: (Item) -> Content
@@ -652,6 +657,7 @@ struct FlowLayoutDetail<Item: Hashable, Content: View>: View {
     var body: some View {
         GeometryReader { geometry in generateContent(in: geometry) }
             .frame(height: totalHeight)
+            .onPreferenceChange(FlowHeightPreferenceKey.self) { totalHeight = $0 }
     }
 
     private func generateContent(in geometry: GeometryProxy) -> some View {
@@ -674,9 +680,8 @@ struct FlowLayoutDetail<Item: Hashable, Content: View>: View {
                     }
             }
         }
-        .background(GeometryReader { g -> Color in
-            DispatchQueue.main.async { totalHeight = g.size.height }
-            return .clear
+        .background(GeometryReader { g in
+            Color.clear.preference(key: FlowHeightPreferenceKey.self, value: g.size.height)
         })
     }
 }

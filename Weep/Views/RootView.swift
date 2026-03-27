@@ -24,13 +24,19 @@ struct RootView: View {
                 SignedOutView()
                     .transition(.opacity)
             } else {
-                HomeView()
+                MainTabView()
                     .transition(.opacity)
             }
         }
         .animation(.easeInOut(duration: 0.4), value: onboardingDone)
         .animation(.easeInOut(duration: 0.3), value: clerk.isLoaded)
         .animation(.easeInOut(duration: 0.3), value: clerk.user?.id)
+        .onChange(of: clerk.user?.id) { old, new in
+            // When user is signed out (e.g. account deletion), re-check onboarding
+            if old != nil && new == nil {
+                onboardingDone = OnboardingViewModel.hasCompletedOnboarding
+            }
+        }
     }
 }
 
@@ -48,14 +54,23 @@ struct SignedOutView: View {
             VStack(spacing: 0) {
                 Spacer()
 
-                VStack(spacing: 12) {
-                    Text("Welcome back")
-                        .font(WeepFont.largeTitle(32))
-                        .foregroundColor(WeepColor.textPrimary)
+                VStack(spacing: 20) {
+                    Image("WeepLogo")
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 72, height: 72)
+                        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                        .shadow(color: .black.opacity(0.08), radius: 12, y: 4)
 
-                    Text("Sign in to continue")
-                        .font(WeepFont.body(16))
-                        .foregroundColor(WeepColor.textSecondary)
+                    VStack(spacing: 12) {
+                        Text("Welcome back")
+                            .font(WeepFont.largeTitle(32))
+                            .foregroundColor(WeepColor.textPrimary)
+
+                        Text("Sign in to continue")
+                            .font(WeepFont.body(16))
+                            .foregroundColor(WeepColor.textSecondary)
+                    }
                 }
 
                 Spacer()
@@ -72,20 +87,16 @@ struct SignedOutView: View {
                     Button {
                         signIn { try await clerk.auth.signInWithApple() }
                     } label: {
-                        ZStack {
+                        HStack(spacing: 8) {
+                            Image(systemName: "apple.logo")
+                                .font(.system(size: 18, weight: .medium))
                             Text("Continue with Apple")
                                 .font(WeepFont.bodyMedium(16))
-                            HStack {
-                                Image(systemName: "apple.logo")
-                                    .font(.system(size: 18, weight: .medium))
-                                    .padding(.leading, 20)
-                                Spacer()
-                            }
                         }
                         .frame(height: 54)
                         .frame(maxWidth: .infinity)
-                        .foregroundColor(.white)
-                        .background(Capsule().fill(WeepColor.buttonPrimary))
+                        .foregroundColor(Color(.systemBackground))
+                        .background(Capsule().fill(Color(.label)))
                     }
                     .buttonStyle(.plain)
                     .disabled(isLoading)
@@ -93,22 +104,21 @@ struct SignedOutView: View {
                     Button {
                         signIn { try await clerk.auth.signInWithOAuth(provider: .google) }
                     } label: {
-                        ZStack {
+                        HStack(spacing: 8) {
+                            Image("GoogleLogo")
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .frame(width: 18, height: 18)
                             Text("Continue with Google")
                                 .font(WeepFont.bodyMedium(16))
-                            HStack {
-                                Image("GoogleLogo")
-                                    .resizable()
-                                    .aspectRatio(contentMode: .fit)
-                                    .frame(width: 18, height: 18)
-                                    .padding(.leading, 20)
-                                Spacer()
-                            }
                         }
                         .frame(height: 54)
                         .frame(maxWidth: .infinity)
-                        .foregroundColor(WeepColor.textPrimary)
-                        .background(Capsule().strokeBorder(WeepColor.cardBorder, lineWidth: 1))
+                        .foregroundColor(Color(.label))
+                        .background(
+                            Capsule()
+                                .fill(Color(.secondarySystemGroupedBackground))
+                        )
                     }
                     .buttonStyle(.plain)
                     .disabled(isLoading)
@@ -140,9 +150,7 @@ struct SignedOutView: View {
 // MARK: - Home
 
 struct HomeView: View {
-    @Environment(Clerk.self) private var clerk
     @State private var store = KitchenStore.shared
-    @State private var showCamera = false
     @State private var selectedItem: FoodItem?
 
     private var freshCount: Int { store.items.filter { $0.freshnessStatus == .veryFresh || $0.freshnessStatus == .fresh }.count }
@@ -154,12 +162,9 @@ struct HomeView: View {
     }
 
     var body: some View {
-        ZStack(alignment: .bottomTrailing) {
-            WeepColor.background.ignoresSafeArea()
-
+        NavigationStack {
             ScrollView {
                 VStack(spacing: 0) {
-                    headerSection
                     weekStrip
                         .padding(.top, 8)
 
@@ -174,77 +179,35 @@ struct HomeView: View {
                             .padding(.top, 28)
                     }
 
-                    Spacer().frame(height: 100)
+                    Spacer().frame(height: 32)
                 }
             }
-
-            // Floating + button
-            Button {
-                WeepHaptics.light()
-                showCamera = true
-            } label: {
-                Image(systemName: "plus")
-                    .font(.system(size: 22, weight: .semibold))
-                    .foregroundColor(.white)
-                    .frame(width: 60, height: 60)
-                    .background(Circle().fill(WeepColor.buttonPrimary))
-                    .shadow(color: .black.opacity(0.15), radius: 12, y: 4)
+            .background(WeepColor.background)
+            .navigationTitle("My Kitchen")
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Image("WeepLogo")
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 32, height: 32)
+                        .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
+                }
+                ToolbarItem(placement: .topBarTrailing) {
+                    if !store.items.isEmpty {
+                        HStack(spacing: 4) {
+                            Image(systemName: "refrigerator.fill")
+                                .font(.system(size: 12))
+                            Text("\(store.items.count)")
+                                .font(.system(size: 14, weight: .semibold))
+                        }
+                        .foregroundColor(WeepColor.textSecondary)
+                    }
+                }
             }
-            .padding(.trailing, 24)
-            .padding(.bottom, 24)
-        }
-        .fullScreenCover(isPresented: $showCamera) {
-            CameraCaptureView(
-                onComplete: { item in
-                    store.addItem(item)
-                    showCamera = false
-                },
-                onDismiss: { showCamera = false }
-            )
         }
         .sheet(item: $selectedItem) { item in
             ProductDetailSheet(item: item)
         }
-    }
-
-    // MARK: - Header
-
-    private var headerSection: some View {
-        HStack(alignment: .center) {
-            Text("My Kitchen")
-                .font(WeepFont.largeTitle(26))
-                .foregroundColor(WeepColor.textPrimary)
-
-            Spacer()
-
-            if !store.items.isEmpty {
-                HStack(spacing: 4) {
-                    Image(systemName: "refrigerator.fill")
-                        .font(.system(size: 13))
-                    Text("\(store.items.count)")
-                        .font(.system(size: 15, weight: .semibold))
-                }
-                .foregroundColor(WeepColor.textPrimary)
-                .padding(.horizontal, 14)
-                .padding(.vertical, 8)
-                .background(
-                    Capsule().fill(WeepColor.cardBackground)
-                        .shadow(color: .black.opacity(0.04), radius: 4, y: 2)
-                )
-            }
-
-            Menu {
-                Button { Task { try? await clerk.auth.signOut() } } label: {
-                    Label("Sign out", systemImage: "rectangle.portrait.and.arrow.right")
-                }
-            } label: {
-                Image(systemName: "person.circle")
-                    .font(.system(size: 24, weight: .light))
-                    .foregroundColor(WeepColor.textSecondary)
-            }
-        }
-        .padding(.horizontal, 24)
-        .padding(.top, 12)
     }
 
     // MARK: - Week Strip
@@ -494,7 +457,7 @@ struct FoodItemCard: View {
                     HStack(spacing: 12) {
                         if let p = n.protein { macroChip(icon: "flame.fill", value: p, color: WeepColor.alertRed) }
                         if let c = n.totalCarbohydrates { macroChip(icon: "leaf.fill", value: c, color: WeepColor.alertAmber) }
-                        if let f = n.totalFat { macroChip(icon: "drop.fill", value: f, color: Color(hex: 0x5B9BD5)) }
+                        if let f = n.totalFat { macroChip(icon: "drop.fill", value: f, color: WeepColor.macroFat) }
                     }
                 } else if let brand = item.brand {
                     Text(brand)

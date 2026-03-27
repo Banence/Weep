@@ -130,7 +130,7 @@ struct CameraIllustration: View {
             ZStack {
                 // Soft background
                 RoundedRectangle(cornerRadius: 20, style: .continuous)
-                    .fill(Color(hex: 0xF0EFEC))
+                    .fill(Color(.tertiarySystemGroupedBackground))
 
                 // Product image
                 AsyncImage(url: URL(string: "https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?w=400&h=300&fit=crop")) { image in
@@ -138,7 +138,7 @@ struct CameraIllustration: View {
                         .resizable()
                         .aspectRatio(contentMode: .fill)
                 } placeholder: {
-                    Color(hex: 0xE8E7E3)
+                    Color(.systemGray5)
                 }
                 .frame(height: 160)
                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
@@ -187,7 +187,7 @@ struct CameraIllustration: View {
                         .resizable()
                         .aspectRatio(contentMode: .fill)
                 } placeholder: {
-                    Color(hex: 0xE8E7E3)
+                    Color(.systemGray5)
                 }
                 .frame(width: 38, height: 38)
                 .clipShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
@@ -311,8 +311,8 @@ struct PhoneIllustration: View {
     let showNotif2: Bool
     let showNotif3: Bool
 
-    private let gridColor = Color(hex: 0xEAE9E5)
-    private let phoneColor = Color(hex: 0xF3F2EF)
+    private let gridColor = Color(.systemGray4)
+    private let phoneColor = Color(.secondarySystemGroupedBackground)
 
     var body: some View {
         VStack(spacing: 0) {
@@ -383,7 +383,7 @@ struct PhoneIllustration: View {
         )
         .overlay(
             RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .strokeBorder(Color(hex: 0xE2E1DD), lineWidth: 1)
+                .strokeBorder(Color(.separator), lineWidth: 1)
         )
     }
 
@@ -429,7 +429,7 @@ struct PhoneIllustration: View {
         .padding(.vertical, 10)
         .background(
             RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .fill(.white)
+                .fill(Color(.systemBackground))
                 .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 2)
         )
     }

@@ -1,7 +1,7 @@
 import SwiftUI
 import CoreHaptics
 
-// MARK: - Colors
+// MARK: - Colors (adaptive for light/dark mode)
 
 enum WeepColor {
     // Core palette
@@ -11,31 +11,34 @@ enum WeepColor {
     static let alertAmber = Color(hex: 0xF4A261)
     static let alertRed = Color(hex: 0xE76F51)
 
-    // Surfaces
-    static let background = Color(hex: 0xF7F6F3)
-    static let cardBackground = Color.white
-    static let cardBorder = Color(hex: 0xE8E6E1)
+    // Surfaces — adaptive
+    static let background = Color(.systemGroupedBackground)
+    static let cardBackground = Color(.secondarySystemGroupedBackground)
+    static let cardBorder = Color(.separator)
 
-    // Text
-    static let textPrimary = Color(hex: 0x1A1A1A)
-    static let textSecondary = Color(hex: 0x9B9B9B)
+    // Text — adaptive
+    static let textPrimary = Color(.label)
+    static let textSecondary = Color(.secondaryLabel)
 
-    // Button
-    static let buttonPrimary = Color(hex: 0x1A1A1A)
-    static let buttonPrimaryText = Color.white
+    // Button — adaptive
+    static let buttonPrimary = Color(.label)
+    static let buttonPrimaryText = Color(.systemBackground)
 
     // Accent — vibrant green (selected states, toggles, tags)
     static let accent = Color(hex: 0x34C759)
-    static let accentLight = Color(hex: 0xDAF5E4)
+    static let accentLight = Color(.systemGreen).opacity(0.12)
 
     // Secondary — warm terracotta (secondary highlights)
     static let secondary = Color(hex: 0xE07A5F)
     static let secondaryLight = Color(hex: 0xFDE8E2)
 
-    // Subtle
-    static let iconMuted = Color(hex: 0xC5C3BE)
-    static let divider = Color(hex: 0xEDEBE7)
-    static let placeholder = Color(hex: 0xA8A8A8)
+    // Macro nutrients
+    static let macroFat = Color(hex: 0x5B9BD5)
+
+    // Subtle — adaptive
+    static let iconMuted = Color(.tertiaryLabel)
+    static let divider = Color(.separator)
+    static let placeholder = Color(.placeholderText)
 }
 
 extension Color {

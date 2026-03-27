@@ -31,9 +31,12 @@ struct OnboardingContainerView: View {
             viewModel.restoreFromUserDefaults()
 
             // If user already has a Clerk session, skip sign-up and go to greeting or beyond
-            if clerk.user != nil {
+            if let user = clerk.user {
                 if viewModel.currentStep == .welcome || viewModel.currentStep == .signUp {
-                    viewModel.displayName = clerk.user?.firstName ?? clerk.user?.username ?? "there"
+                    let name = user.firstName
+                        ?? user.username
+                        ?? user.emailAddresses.first?.emailAddress.components(separatedBy: "@").first
+                    viewModel.displayName = (name ?? "").isEmpty ? "" : name!
                     viewModel.currentStep = .greeting
                 }
             }
@@ -49,6 +52,8 @@ struct OnboardingContainerView: View {
                     withAnimation(.easeInOut(duration: 0.3)) {
                         if viewModel.firstScanSubView {
                             viewModel.firstScanSubView = false
+                        } else if viewModel.currentStep == .permissions && viewModel.permissionSubStep > 0 {
+                            viewModel.permissionSubStep = 0
                         } else {
                             viewModel.goBack()
                         }

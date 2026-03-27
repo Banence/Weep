@@ -7,6 +7,17 @@ struct WelcomeScreen: View {
         VStack(spacing: 0) {
             Spacer()
 
+            // Logo
+            Image("WeepLogo")
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .frame(width: 80, height: 80)
+                .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                .shadow(color: .black.opacity(0.08), radius: 12, y: 4)
+                .staggeredAppear(delay: 0.0)
+
+            Spacer().frame(height: 24)
+
             // Headline
             Text("Welcome to Weep")
                 .font(WeepFont.largeTitle(28))

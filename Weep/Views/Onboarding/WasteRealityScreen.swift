@@ -25,9 +25,9 @@ struct WasteRealityScreen: View {
     private var sliderIconColor: Color {
         switch viewModel.selfReportedWasteLevel {
         case 0..<0.3: return WeepColor.accent
-        case 0.3..<0.6: return Color(hex: 0xF0A030)
+        case 0.3..<0.6: return WeepColor.alertAmber
         case 0.6..<0.85: return WeepColor.secondary
-        default: return Color(hex: 0xD94040)
+        default: return WeepColor.alertRed
         }
     }
 
