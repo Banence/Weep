@@ -46,20 +46,15 @@ struct SignUpScreen: View {
                 Button {
                     signIn { try await clerk.auth.signInWithApple() }
                 } label: {
-                    ZStack {
+                    HStack(spacing: 8) {
+                        Image(systemName: "apple.logo")
+                            .font(.system(size: 18, weight: .medium))
                         Text("Continue with Apple")
                             .font(WeepFont.bodyMedium(16))
-
-                        HStack {
-                            Image(systemName: "apple.logo")
-                                .font(.system(size: 18, weight: .medium))
-                                .padding(.leading, 20)
-                            Spacer()
-                        }
                     }
                     .frame(height: 54)
                     .frame(maxWidth: .infinity)
-                    .foregroundColor(.white)
+                    .foregroundColor(WeepColor.buttonPrimaryText)
                     .background(Capsule().fill(WeepColor.buttonPrimary))
                 }
                 .buttonStyle(.plain)
@@ -70,18 +65,13 @@ struct SignUpScreen: View {
                 Button {
                     signIn { try await clerk.auth.signInWithOAuth(provider: .google) }
                 } label: {
-                    ZStack {
+                    HStack(spacing: 8) {
+                        Image("GoogleLogo")
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(width: 18, height: 18)
                         Text("Continue with Google")
                             .font(WeepFont.bodyMedium(16))
-
-                        HStack {
-                            Image("GoogleLogo")
-                                .resizable()
-                                .aspectRatio(contentMode: .fit)
-                                .frame(width: 18, height: 18)
-                                .padding(.leading, 20)
-                            Spacer()
-                        }
                     }
                     .frame(height: 54)
                     .frame(maxWidth: .infinity)
@@ -151,7 +141,13 @@ struct SignUpScreen: View {
         WeepHaptics.success()
 
         if let user = clerk.user {
-            viewModel.displayName = user.firstName ?? user.username ?? "there"
+            // Apple only sends the name on the very first authorization.
+            // On subsequent sign-ins (e.g. after account deletion), firstName is nil.
+            // Fall back to username, then email prefix, then a friendly default.
+            let name = user.firstName
+                ?? user.username
+                ?? user.emailAddresses.first?.emailAddress.components(separatedBy: "@").first
+            viewModel.displayName = (name ?? "").isEmpty ? "" : name!
         }
 
         onContinue()

@@ -70,18 +70,14 @@ struct CameraCaptureView: View {
         VStack(spacing: 0) {
             // Top bar
             HStack {
+                Spacer()
+
                 Button { onDismiss() } label: {
                     Image(systemName: "xmark")
                         .font(.system(size: 17, weight: .medium))
                         .foregroundColor(.white)
-                }
-
-                Spacer()
-
-                if cameraService.isCameraAvailable {
-                    Image(systemName: "bolt.slash.fill")
-                        .font(.system(size: 17, weight: .medium))
-                        .foregroundColor(.white)
+                        .frame(width: 36, height: 36)
+                        .background(Circle().fill(.white.opacity(0.15)))
                 }
             }
             .padding(.horizontal, 20)
@@ -299,8 +295,7 @@ struct CameraCaptureView: View {
                 )
                 .datePickerStyle(.graphical)
                 .tint(WeepColor.accent)
-                .environment(\.colorScheme, .light)
-                .padding(.horizontal, 24)
+                                .padding(.horizontal, 24)
 
                 Spacer()
 
@@ -645,8 +640,7 @@ struct CameraCaptureView: View {
                                     )
                                     .labelsHidden()
                                     .tint(WeepColor.accent)
-                                    .environment(\.colorScheme, .light)
-
+                                    
                                     Spacer()
 
                                     Image(systemName: "checkmark.circle.fill")

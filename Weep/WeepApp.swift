@@ -8,27 +8,55 @@ struct WeepApp: App {
         clearStaleSession()
     }
 
+    @State private var themeManager = ThemeManager.shared
+    @State private var showSplash = true
+
     var body: some Scene {
         WindowGroup {
-            RootView()
-                .environment(Clerk.shared)
+            ZStack {
+                RootView()
+                    .environment(Clerk.shared)
+                    .preferredColorScheme(themeManager.currentTheme.colorScheme)
+
+                if showSplash {
+                    SplashView()
+                        .transition(.opacity)
+                        .zIndex(1)
+                }
+            }
+            .animation(.easeOut(duration: 0.4), value: showSplash)
+            .onAppear {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
+                    showSplash = false
+                }
+            }
         }
     }
 
-    /// Validates the current session on launch.
-    /// If the session was deleted server-side, signs out locally
-    /// so the user is routed to the sign-in screen.
     private func clearStaleSession() {
         Task {
             do {
                 _ = try await Clerk.shared.auth.getToken()
             } catch {
-                // Session is invalid — force sign out.
-                // Even if signOut() throws (session already gone server-side),
-                // the SDK reconciles its local state from the error response,
-                // setting clerk.user to nil and routing to SignedOutView.
                 try? await Clerk.shared.auth.signOut()
             }
+        }
+    }
+}
+
+// MARK: - Splash Screen
+
+struct SplashView: View {
+    var body: some View {
+        ZStack {
+            Color(.systemGroupedBackground)
+                .ignoresSafeArea()
+
+            Image("WeepLogo")
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .frame(width: 80, height: 80)
+                .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         }
     }
 }

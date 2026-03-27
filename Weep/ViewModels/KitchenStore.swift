@@ -22,6 +22,11 @@ class KitchenStore {
         save()
     }
 
+    func clearAll() {
+        items.removeAll()
+        UserDefaults.standard.removeObject(forKey: storageKey)
+    }
+
     func updateItem(_ item: FoodItem) {
         guard let index = items.firstIndex(where: { $0.id == item.id }) else { return }
         items[index] = item

@@ -39,7 +39,7 @@ struct ClaudeProductAnalyzer {
     // This is a development key for prototyping only.
     private static let apiKey = ProcessInfo.processInfo.environment["ANTHROPIC_API_KEY"] ?? ""
     private static let endpoint = "https://api.anthropic.com/v1/messages"
-    private static let model = "claude-haiku-4-5-20251001"
+    private static let model = "claude-sonnet-4-5-20250514"
 
     static func analyze(image: UIImage) async -> ProductAnalysisResult? {
         guard let imageData = image.jpegData(compressionQuality: 0.6) else { return nil }
