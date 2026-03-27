@@ -13,7 +13,7 @@ struct PermissionsScreen: View {
                     onAllow: { requestCameraPermission() },
                     onDefer: {
                         WeepHaptics.light()
-                        withAnimation(.easeInOut(duration: 0.3)) {
+                        withAnimation(.snappy(duration: 0.25)) {
                             viewModel.permissionSubStep = 1
                         }
                     }
@@ -33,7 +33,7 @@ struct PermissionsScreen: View {
                 ))
             }
         }
-        .animation(.easeInOut(duration: 0.3), value: viewModel.permissionSubStep)
+        .animation(.snappy(duration: 0.25), value: viewModel.permissionSubStep)
     }
 
     private func requestCameraPermission() {
@@ -41,7 +41,7 @@ struct PermissionsScreen: View {
         AVCaptureDevice.requestAccess(for: .video) { granted in
             DispatchQueue.main.async {
                 viewModel.cameraPermissionGranted = granted
-                withAnimation(.easeInOut(duration: 0.3)) {
+                withAnimation(.snappy(duration: 0.25)) {
                     viewModel.permissionSubStep = 1
                 }
             }
@@ -282,9 +282,9 @@ struct NotificationPermissionView: View {
             permissionButtons(title: "Enable notifications", onAllow: onAllow, onDefer: onDefer)
         }
         .onAppear {
-            withAnimation(.easeOut(duration: 0.45).delay(0.8)) { showNotif1 = true }
-            withAnimation(.easeOut(duration: 0.45).delay(1.5)) { showNotif2 = true }
-            withAnimation(.easeOut(duration: 0.45).delay(2.2)) { showNotif3 = true }
+            withAnimation(.snappy(duration: 0.35).delay(0.8)) { showNotif1 = true }
+            withAnimation(.snappy(duration: 0.35).delay(1.5)) { showNotif2 = true }
+            withAnimation(.snappy(duration: 0.35).delay(2.2)) { showNotif3 = true }
         }
     }
 }

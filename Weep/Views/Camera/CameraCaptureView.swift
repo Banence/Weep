@@ -25,6 +25,10 @@ struct CameraCaptureView: View {
     @State private var manualDescription = ""
     @State private var showManualDateEntry = false
     @State private var manualDate = Date()
+    @State private var selectedStorageZone = "Fridge"
+
+    private let storageZones = ["Fridge", "Freezer", "Pantry"]
+    private let storageZoneIcons = ["Fridge": "refrigerator", "Freezer": "snowflake", "Pantry": "cabinet"]
 
     let onComplete: (FoodItem) -> Void
     let onDismiss: () -> Void
@@ -161,7 +165,7 @@ struct CameraCaptureView: View {
                             .fill(.white)
                             .frame(width: 58, height: 58)
                             .scaleEffect(isCapturing ? 0.85 : 1)
-                            .animation(.easeInOut(duration: 0.15), value: isCapturing)
+                            .animation(.snappy(duration: 0.12), value: isCapturing)
                     }
                 }
                 .disabled(isCapturing || isIdentifying || !cameraService.isCameraAvailable)
@@ -197,7 +201,7 @@ struct CameraCaptureView: View {
                     productImage = image
                     cameraService.stop()
                     await analyzeProduct(image)
-                    withAnimation(.easeInOut(duration: 0.3)) {
+                    withAnimation(.snappy(duration: 0.25)) {
                         captureStep = .expiryDate
                     }
                 }
@@ -260,7 +264,7 @@ struct CameraCaptureView: View {
                 ) {
                     productName = manualDescription.trimmingCharacters(in: .whitespaces)
                     showManualEntry = false
-                    withAnimation(.easeInOut(duration: 0.3)) {
+                    withAnimation(.snappy(duration: 0.25)) {
                         captureStep = .expiryDate
                     }
                 }
@@ -302,7 +306,7 @@ struct CameraCaptureView: View {
                 WeepButton(title: "Set Date") {
                     parsedDate = manualDate
                     showManualDateEntry = false
-                    withAnimation(.easeInOut(duration: 0.3)) {
+                    withAnimation(.snappy(duration: 0.25)) {
                         captureStep = .reviewing
                     }
                 }
@@ -340,7 +344,7 @@ struct CameraCaptureView: View {
                     guard !dateFoundAutoAdvance else { return }
                     dateFoundAutoAdvance = true
                     DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                        withAnimation(.easeInOut(duration: 0.3)) {
+                        withAnimation(.snappy(duration: 0.25)) {
                             captureStep = .reviewing
                         }
                     }
@@ -362,7 +366,7 @@ struct CameraCaptureView: View {
                 // Top bar
                 HStack {
                     Button {
-                        withAnimation(.easeInOut(duration: 0.3)) {
+                        withAnimation(.snappy(duration: 0.25)) {
                             captureStep = .product
                             productImage = nil
                             productName = ""
@@ -379,7 +383,8 @@ struct CameraCaptureView: View {
                     stepIndicator(current: 2, total: 2)
                     Spacer()
                     Button {
-                        withAnimation(.easeInOut(duration: 0.3)) { captureStep = .reviewing }
+                        applyEstimatedExpiryFromAI()
+                        withAnimation(.snappy(duration: 0.25)) { captureStep = .reviewing }
                     } label: {
                         Text("Skip")
                             .font(.system(size: 15, weight: .medium))
@@ -448,7 +453,7 @@ struct CameraCaptureView: View {
                         .background(Capsule().fill(.white.opacity(0.15)))
                     }
                 }
-                .animation(.easeInOut(duration: 0.3), value: parsedDate != nil)
+                .animation(.snappy(duration: 0.25), value: parsedDate != nil)
                 .padding(.bottom, 40)
             }
         }
@@ -461,7 +466,7 @@ struct CameraCaptureView: View {
             VStack(spacing: 0) {
                 HStack {
                     Button {
-                        withAnimation(.easeInOut(duration: 0.3)) {
+                        withAnimation(.snappy(duration: 0.25)) {
                             captureStep = .product
                             productImage = nil
                             productName = ""
@@ -476,7 +481,8 @@ struct CameraCaptureView: View {
                     stepIndicator(current: 2, total: 2)
                     Spacer()
                     Button {
-                        withAnimation(.easeInOut(duration: 0.3)) { captureStep = .reviewing }
+                        applyEstimatedExpiryFromAI()
+                        withAnimation(.snappy(duration: 0.25)) { captureStep = .reviewing }
                     } label: {
                         Text("Skip")
                             .font(.system(size: 15, weight: .medium))
@@ -531,7 +537,7 @@ struct CameraCaptureView: View {
             VStack(spacing: 0) {
                 HStack {
                     Button {
-                        withAnimation(.easeInOut(duration: 0.3)) {
+                        withAnimation(.snappy(duration: 0.25)) {
                             captureStep = .expiryDate
                             parsedDate = nil
                             scannedDateText = ""
@@ -670,6 +676,46 @@ struct CameraCaptureView: View {
                         }
                         .padding(.horizontal, 24)
 
+                        // Storage zone
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text("Storage space")
+                                .font(WeepFont.caption(13))
+                                .foregroundColor(WeepColor.textSecondary)
+
+                            HStack(spacing: 8) {
+                                ForEach(storageZones, id: \.self) { zone in
+                                    let isSelected = selectedStorageZone == zone
+                                    Button {
+                                        WeepHaptics.light()
+                                        withAnimation(.snappy(duration: 0.15)) {
+                                            selectedStorageZone = zone
+                                        }
+                                    } label: {
+                                        HStack(spacing: 6) {
+                                            Image(systemName: storageZoneIcons[zone] ?? "questionmark")
+                                                .font(.system(size: 14))
+                                            Text(zone)
+                                                .font(WeepFont.bodyMedium(14))
+                                        }
+                                        .foregroundColor(isSelected ? .white : WeepColor.textPrimary)
+                                        .padding(.horizontal, 14)
+                                        .padding(.vertical, 10)
+                                        .frame(maxWidth: .infinity)
+                                        .background(
+                                            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                                .fill(isSelected ? WeepColor.accent : WeepColor.cardBackground)
+                                        )
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                                .strokeBorder(isSelected ? Color.clear : WeepColor.cardBorder, lineWidth: 1)
+                                        )
+                                    }
+                                    .buttonStyle(.plain)
+                                }
+                            }
+                        }
+                        .padding(.horizontal, 24)
+
                         Spacer(minLength: 100)
                     }
                 }
@@ -685,7 +731,7 @@ struct CameraCaptureView: View {
                 .padding(.bottom, 20)
             }
         }
-        .animation(.easeInOut(duration: 0.3), value: isIdentifying)
+        .animation(.snappy(duration: 0.25), value: isIdentifying)
     }
 
     // MARK: - Actions
@@ -695,11 +741,11 @@ struct CameraCaptureView: View {
         isCapturing = true
         WeepHaptics.medium()
 
-        withAnimation(.easeOut(duration: 0.1)) { showFlash = true }
-        withAnimation(.easeIn(duration: 0.2).delay(0.1)) { showFlash = false }
+        withAnimation(.easeOut(duration: 0.08)) { showFlash = true }
+        withAnimation(.easeIn(duration: 0.15).delay(0.1)) { showFlash = false }
 
         if let image = await cameraService.capturePhoto() {
-            withAnimation(.easeInOut(duration: 0.3)) {
+            withAnimation(.snappy(duration: 0.25)) {
                 productImage = image
             }
             cameraService.stop()
@@ -708,12 +754,19 @@ struct CameraCaptureView: View {
             // Show analyzing overlay while AI works
             await analyzeProduct(image)
 
-            withAnimation(.easeInOut(duration: 0.3)) {
+            withAnimation(.snappy(duration: 0.25)) {
                 captureStep = .expiryDate
             }
         } else {
             isCapturing = false
         }
+    }
+
+    private func applyEstimatedExpiryFromAI() {
+        guard parsedDate == nil,
+              let days = analysisResult?.estimatedShelfLifeDays,
+              days > 0 else { return }
+        parsedDate = Calendar.current.date(byAdding: .day, value: days, to: Date())
     }
 
     private func analyzeProduct(_ image: UIImage) async {
@@ -722,14 +775,17 @@ struct CameraCaptureView: View {
         async let visionFallback = ProductIdentifier.identify(from: image)
 
         if let result = await claudeResult {
-            withAnimation {
+            withAnimation(.snappy(duration: 0.25)) {
                 analysisResult = result
                 productName = result.name
+                if let zone = result.suggestedStorageZone, storageZones.contains(zone) {
+                    selectedStorageZone = zone
+                }
                 isIdentifying = false
             }
         } else {
             let fallbackName = await visionFallback
-            withAnimation {
+            withAnimation(.snappy(duration: 0.25)) {
                 if !fallbackName.isEmpty { productName = fallbackName }
                 isIdentifying = false
             }
@@ -741,7 +797,7 @@ struct CameraCaptureView: View {
             name: productName.trimmingCharacters(in: .whitespaces),
             expiryDate: parsedDate,
             productImageData: productImage?.jpegData(compressionQuality: 0.7),
-            storageZone: analysisResult?.suggestedStorageZone ?? "Fridge"
+            storageZone: selectedStorageZone
         )
         if let result = analysisResult {
             ClaudeProductAnalyzer.applyAnalysis(result, to: &item)

@@ -1,4 +1,6 @@
 import SwiftUI
+import ClerkKit
+import Supabase
 
 @Observable
 class OnboardingViewModel {
@@ -98,7 +100,7 @@ class OnboardingViewModel {
     func complete() {
         onboardingCompleted = true
         persistToUserDefaults()
-        // TODO: Persist to Clerk unsafeMetadata when SDK is integrated
+        Task { await persistToSupabase() }
     }
 
     // MARK: - Persistence (UserDefaults for mid-onboarding resume)
@@ -155,5 +157,77 @@ class OnboardingViewModel {
     static var hasCompletedOnboarding: Bool {
         guard let state = UserDefaults.standard.dictionary(forKey: "weep_onboarding_state") else { return false }
         return state["onboardingCompleted"] as? Bool ?? false
+    }
+
+    // MARK: - Supabase Persistence
+
+    func persistToSupabase() async {
+        guard let userId = Clerk.shared.user?.id else { return }
+
+        let zoneDTOs = storageZones.map {
+            StorageZoneDTO(id: $0.id.uuidString, name: $0.name, icon: $0.icon, isEnabled: $0.isEnabled)
+        }
+
+        let profile = ProfileDTO(
+            id: nil,
+            userId: userId,
+            displayName: displayName,
+            avatarChoice: avatarChoice,
+            householdAdults: householdAdults,
+            householdChildren: householdChildren,
+            hasPets: hasPets,
+            shoppingFrequency: shoppingFrequency?.rawValue,
+            shoppingLocations: shoppingLocations.map(\.rawValue),
+            storageZones: zoneDTOs,
+            dietaryPreferences: dietaryPreferences.map(\.rawValue),
+            selfReportedWasteLevel: selfReportedWasteLevel,
+            primaryGoal: primaryGoal?.rawValue,
+            onboardingCompleted: onboardingCompleted,
+            appTheme: ThemeManager.shared.currentTheme.rawValue
+        )
+
+        do {
+            try await SupabaseService.shared.client
+                .from("profiles")
+                .upsert(profile, onConflict: "user_id")
+                .execute()
+        } catch {
+            print("[Onboarding] Failed to persist profile to Supabase: \(error)")
+        }
+    }
+
+    func loadFromSupabase() async {
+        guard let userId = Clerk.shared.user?.id else { return }
+
+        do {
+            let profiles: [ProfileDTO] = try await SupabaseService.shared.client
+                .from("profiles")
+                .select()
+                .eq("user_id", value: userId)
+                .limit(1)
+                .execute()
+                .value
+
+            guard let profile = profiles.first else { return }
+
+            await MainActor.run {
+                self.displayName = profile.displayName
+                self.avatarChoice = profile.avatarChoice
+                self.householdAdults = profile.householdAdults
+                self.householdChildren = profile.householdChildren
+                self.hasPets = profile.hasPets
+                self.shoppingFrequency = ShoppingFrequency(rawValue: profile.shoppingFrequency ?? "")
+                self.shoppingLocations = Set(profile.shoppingLocations.compactMap { ShoppingLocation(rawValue: $0) })
+                self.storageZones = profile.storageZones.map {
+                    StorageZone(id: UUID(uuidString: $0.id) ?? UUID(), name: $0.name, icon: $0.icon, isEnabled: $0.isEnabled)
+                }
+                self.dietaryPreferences = Set(profile.dietaryPreferences.compactMap { DietaryPreference(rawValue: $0) })
+                self.selfReportedWasteLevel = profile.selfReportedWasteLevel
+                self.primaryGoal = PrimaryGoal(rawValue: profile.primaryGoal ?? "")
+                self.onboardingCompleted = profile.onboardingCompleted
+            }
+        } catch {
+            print("[Onboarding] Failed to load profile from Supabase: \(error)")
+        }
     }
 }

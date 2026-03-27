@@ -23,15 +23,15 @@ struct FirstScanScreen: View {
                 mainView
             }
         }
-        .animation(.easeInOut(duration: 0.3), value: showManualEntry)
-        .animation(.easeInOut(duration: 0.3), value: showCelebration)
+        .animation(.snappy(duration: 0.25), value: showManualEntry)
+        .animation(.snappy(duration: 0.25), value: showCelebration)
         .fullScreenCover(isPresented: $showCamera) {
             CameraCaptureView(
                 onComplete: { item in
                     KitchenStore.shared.addItem(item)
                     showCamera = false
                     viewModel.firstItemAdded = true
-                    withAnimation(.easeInOut(duration: 0.3)) { showCelebration = true }
+                    withAnimation(.snappy(duration: 0.25)) { showCelebration = true }
                 },
                 onDismiss: {
                     showCamera = false
@@ -78,7 +78,7 @@ struct FirstScanScreen: View {
                             subtitle: "Type in the product name"
                         ) {
                             WeepHaptics.light()
-                            withAnimation(.easeInOut(duration: 0.3)) { showManualEntry = true }
+                            withAnimation(.snappy(duration: 0.25)) { showManualEntry = true }
                         }
                     }
                     .staggeredAppear(delay: 0.2)
@@ -175,11 +175,11 @@ struct FirstScanScreen: View {
                     let item = FoodItem(name: manualItemName.trimmingCharacters(in: .whitespaces))
                     KitchenStore.shared.addItem(item)
                     viewModel.firstItemAdded = true
-                    withAnimation(.easeInOut(duration: 0.3)) { showCelebration = true }
+                    withAnimation(.snappy(duration: 0.25)) { showCelebration = true }
                 }
 
                 Button("Go back") {
-                    withAnimation(.easeInOut(duration: 0.3)) { showManualEntry = false }
+                    withAnimation(.snappy(duration: 0.25)) { showManualEntry = false }
                 }
                 .font(WeepFont.body(15))
                 .foregroundColor(WeepColor.textSecondary)

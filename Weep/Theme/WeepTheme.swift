@@ -116,9 +116,9 @@ struct StaggeredAppearModifier: ViewModifier {
     func body(content: Content) -> some View {
         content
             .opacity(appeared ? 1 : 0)
-            .offset(y: appeared ? 0 : 12)
+            .offset(y: appeared ? 0 : 8)
             .onAppear {
-                withAnimation(.easeOut(duration: 0.5).delay(delay)) {
+                withAnimation(.easeOut(duration: 0.35).delay(delay)) {
                     appeared = true
                 }
             }

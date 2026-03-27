@@ -4,13 +4,15 @@ import ClerkKit
 enum AppTab: Int, Hashable {
     case kitchen
     case planner
-    case insights
+    case history
     case profile
 }
 
 struct MainTabView: View {
     @State private var selectedTab: AppTab = .kitchen
     @State private var showCamera = false
+    @State private var showExpiryCheckIn = false
+    @State private var store = KitchenStore.shared
 
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
@@ -23,8 +25,8 @@ struct MainTabView: View {
                     MealPlannerPlaceholderView()
                 }
 
-                Tab("Insights", systemImage: "chart.bar.fill", value: .insights) {
-                    InsightsPlaceholderView()
+                Tab("History", systemImage: "clock.arrow.circlepath", value: .history) {
+                    HistoryView()
                 }
 
                 Tab("Profile", systemImage: "person.fill", value: .profile) {
@@ -52,7 +54,7 @@ struct MainTabView: View {
                 .padding(.trailing, 20)
                 .padding(.bottom, 72)
                 .transition(.scale.combined(with: .opacity))
-                .animation(.easeInOut(duration: 0.2), value: selectedTab)
+                .animation(.snappy(duration: 0.2), value: selectedTab)
             }
         }
         .fullScreenCover(isPresented: $showCamera) {
@@ -63,6 +65,39 @@ struct MainTabView: View {
                 },
                 onDismiss: { showCamera = false }
             )
+        }
+        .sheet(isPresented: $showExpiryCheckIn) {
+            ExpiryCheckInSheet()
+        }
+        .task {
+            // Wait for Clerk auth to be ready before syncing
+            while Clerk.shared.user == nil {
+                try? await Task.sleep(for: .milliseconds(200))
+                if Task.isCancelled { return }
+            }
+
+            // Sync all data from Supabase
+            async let kitchenSync: () = store.syncWithRemote()
+            async let themeSync: () = ThemeManager.shared.loadThemeFromSupabase()
+            _ = await (kitchenSync, themeSync)
+
+            // Start listening for realtime changes
+            await store.startRealtimeSync()
+
+            // Check for urgent items AFTER sync completes
+            let hasUrgentItems = store.activeItems.contains { item in
+                guard let days = item.daysUntilExpiry else { return false }
+                return days <= 2
+            }
+            guard hasUrgentItems else { return }
+
+            let lastShown = UserDefaults.standard.double(forKey: "expiry_checkin_last_shown")
+            let now = Date().timeIntervalSince1970
+            guard lastShown < now - 86400 else { return }
+
+            try? await Task.sleep(for: .milliseconds(800))
+            showExpiryCheckIn = true
+            UserDefaults.standard.set(now, forKey: "expiry_checkin_last_shown")
         }
     }
 }
@@ -84,28 +119,6 @@ struct MealPlannerPlaceholderView: View {
                     .foregroundColor(WeepColor.textPrimary)
 
                 Text("Plan your meals to reduce food waste")
-                    .font(WeepFont.caption(15))
-                    .foregroundColor(WeepColor.textSecondary)
-            }
-        }
-    }
-}
-
-struct InsightsPlaceholderView: View {
-    var body: some View {
-        ZStack {
-            WeepColor.background.ignoresSafeArea()
-
-            VStack(spacing: 16) {
-                Image(systemName: "chart.bar.fill")
-                    .font(.system(size: 48, weight: .ultraLight))
-                    .foregroundColor(WeepColor.iconMuted)
-
-                Text("Insights")
-                    .font(WeepFont.headline(20))
-                    .foregroundColor(WeepColor.textPrimary)
-
-                Text("Waste tracking insights coming soon")
                     .font(WeepFont.caption(15))
                     .foregroundColor(WeepColor.textSecondary)
             }

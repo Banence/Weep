@@ -16,7 +16,7 @@ struct OnboardingProgressBar: View {
                 .frame(width: remainingWidth, height: 3.5)
         }
         .frame(width: 160)
-        .animation(.easeInOut(duration: 0.4), value: progress)
+        .animation(.snappy(duration: 0.3), value: progress)
     }
 
     private var filledWidth: CGFloat {

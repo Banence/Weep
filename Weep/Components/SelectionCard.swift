@@ -33,7 +33,7 @@ struct SelectionCard: View {
                     .overlay(
                         RoundedRectangle(cornerRadius: 6, style: .continuous)
                             .strokeBorder(
-                                isSelected ? WeepColor.textPrimary : WeepColor.iconMuted,
+                                isSelected ? WeepColor.textPrimary : Color(.secondaryLabel),
                                 lineWidth: 1.5
                             )
                     )
@@ -59,7 +59,7 @@ struct SelectionCard: View {
             )
         }
         .buttonStyle(ScaleButtonStyle())
-        .animation(.easeInOut(duration: 0.2), value: isSelected)
+        .animation(.snappy(duration: 0.15), value: isSelected)
     }
 }
 
@@ -91,6 +91,6 @@ struct ChipView: View {
                 )
         }
         .buttonStyle(ScaleButtonStyle())
-        .animation(.easeInOut(duration: 0.2), value: isSelected)
+        .animation(.snappy(duration: 0.15), value: isSelected)
     }
 }

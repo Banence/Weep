@@ -39,7 +39,7 @@ struct GreetingScreen: View {
                     .lineSpacing(4)
                     .opacity(showSubtitle ? 1 : 0)
                     .offset(y: showSubtitle ? 0 : 8)
-                    .animation(.easeOut(duration: 0.6), value: showSubtitle)
+                    .animation(.snappy(duration: 0.4), value: showSubtitle)
             }
 
             Spacer()
@@ -51,7 +51,7 @@ struct GreetingScreen: View {
                 }
             }
             .opacity(showButton ? 1 : 0)
-            .animation(.easeOut(duration: 0.5), value: showButton)
+            .animation(.snappy(duration: 0.35), value: showButton)
         }
         .onAppear { startCycle() }
         .onDisappear { animationTask?.cancel() }

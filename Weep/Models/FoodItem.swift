@@ -1,5 +1,27 @@
 import Foundation
 
+enum RemovalReason: String, Codable, CaseIterable {
+    case used
+    case expired
+    case deleted
+
+    var label: String {
+        switch self {
+        case .used: return "Used"
+        case .expired: return "Expired"
+        case .deleted: return "Deleted"
+        }
+    }
+
+    var icon: String {
+        switch self {
+        case .used: return "checkmark.circle.fill"
+        case .expired: return "xmark.circle.fill"
+        case .deleted: return "trash.fill"
+        }
+    }
+}
+
 struct FoodItem: Identifiable, Codable {
     let id: UUID
     var name: String
@@ -21,6 +43,12 @@ struct FoodItem: Identifiable, Codable {
     // Nutrition per serving
     var nutrition: NutritionInfo?
 
+    // History tracking
+    var removedAt: Date?
+    var removedReason: RemovalReason?
+
+    var isActive: Bool { removedAt == nil }
+
     init(
         id: UUID = UUID(),
         name: String,
@@ -36,7 +64,9 @@ struct FoodItem: Identifiable, Codable {
         storageTips: String? = nil,
         servingSize: String? = nil,
         weight: String? = nil,
-        nutrition: NutritionInfo? = nil
+        nutrition: NutritionInfo? = nil,
+        removedAt: Date? = nil,
+        removedReason: RemovalReason? = nil
     ) {
         self.id = id
         self.name = name
@@ -53,6 +83,8 @@ struct FoodItem: Identifiable, Codable {
         self.servingSize = servingSize
         self.weight = weight
         self.nutrition = nutrition
+        self.removedAt = removedAt
+        self.removedReason = removedReason
     }
 
     var daysUntilExpiry: Int? {

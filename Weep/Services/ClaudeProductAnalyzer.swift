@@ -11,6 +11,7 @@ struct ProductAnalysisResult: Codable {
     var servingSize: String?
     var weight: String?
     var suggestedStorageZone: String?
+    var estimatedShelfLifeDays: Int?
     var nutrition: NutritionAnalysis?
 
     struct NutritionAnalysis: Codable {
@@ -35,14 +36,35 @@ struct ProductAnalysisResult: Codable {
 
 struct ClaudeProductAnalyzer {
 
-    // NOTE: For production, store this securely (Keychain, backend proxy, etc.)
-    // This is a development key for prototyping only.
-    private static let apiKey = ProcessInfo.processInfo.environment["ANTHROPIC_API_KEY"] ?? ""
+    private static var apiKey: String {
+        // Info.plist (expanded from Secrets.xcconfig at build time)
+        if let key = Bundle.main.object(forInfoDictionaryKey: "ANTHROPIC_API_KEY") as? String,
+           !key.isEmpty, key.hasPrefix("sk-") {
+            return key
+        }
+        // Fallback: Xcode scheme environment variable
+        if let key = ProcessInfo.processInfo.environment["ANTHROPIC_API_KEY"],
+           !key.isEmpty, key.hasPrefix("sk-") {
+            return key
+        }
+        // Debug: log what Info.plist actually contains
+        let raw = Bundle.main.object(forInfoDictionaryKey: "ANTHROPIC_API_KEY") as? String ?? "(nil)"
+        print("[ClaudeProductAnalyzer] Info.plist ANTHROPIC_API_KEY = '\(raw.prefix(20))...' (length: \(raw.count))")
+        return ""
+    }
     private static let endpoint = "https://api.anthropic.com/v1/messages"
-    private static let model = "claude-sonnet-4-5-20250514"
+    private static let model = "claude-sonnet-4-5-20250929"
 
     static func analyze(image: UIImage) async -> ProductAnalysisResult? {
-        guard let imageData = image.jpegData(compressionQuality: 0.6) else { return nil }
+        guard !apiKey.isEmpty else {
+            print("[ClaudeProductAnalyzer] ⚠️ ANTHROPIC_API_KEY not set — skipping AI analysis")
+            return nil
+        }
+
+        guard let imageData = image.jpegData(compressionQuality: 0.6) else {
+            print("[ClaudeProductAnalyzer] ⚠️ Failed to encode image as JPEG")
+            return nil
+        }
         let base64Image = imageData.base64EncodedString()
 
         let prompt = """
@@ -60,6 +82,7 @@ struct ClaudeProductAnalyzer {
           "servingSize": "Serving size if visible (e.g. '1 cup (240ml)')",
           "weight": "Net weight if visible (e.g. '500g', '16 oz')",
           "suggestedStorageZone": "Fridge, Freezer, or Pantry",
+          "estimatedShelfLifeDays": "Integer — estimated number of days this product typically stays fresh after purchase (e.g. 7 for milk, 14 for yogurt, 365 for canned goods, 5 for fresh bread). Use your best knowledge of typical shelf life for this product type.",
           "nutrition": {
             "calories": "amount per serving (e.g. '150 kcal')",
             "totalFat": "amount (e.g. '8g')",
@@ -126,8 +149,14 @@ struct ClaudeProductAnalyzer {
         do {
             let (data, response) = try await URLSession.shared.data(for: request)
 
-            guard let httpResponse = response as? HTTPURLResponse,
-                  httpResponse.statusCode == 200 else {
+            guard let httpResponse = response as? HTTPURLResponse else {
+                print("[ClaudeProductAnalyzer] ⚠️ Invalid response type")
+                return nil
+            }
+
+            guard httpResponse.statusCode == 200 else {
+                let body = String(data: data, encoding: .utf8) ?? "n/a"
+                print("[ClaudeProductAnalyzer] ⚠️ HTTP \(httpResponse.statusCode): \(body)")
                 return nil
             }
 
@@ -136,6 +165,7 @@ struct ClaudeProductAnalyzer {
                   let content = json["content"] as? [[String: Any]],
                   let textBlock = content.first(where: { $0["type"] as? String == "text" }),
                   let text = textBlock["text"] as? String else {
+                print("[ClaudeProductAnalyzer] ⚠️ Failed to parse Claude response structure")
                 return nil
             }
 
@@ -144,8 +174,15 @@ struct ClaudeProductAnalyzer {
             guard let jsonData = cleanedJSON.data(using: .utf8) else { return nil }
 
             let decoder = JSONDecoder()
-            return try? decoder.decode(ProductAnalysisResult.self, from: jsonData)
+            do {
+                return try decoder.decode(ProductAnalysisResult.self, from: jsonData)
+            } catch {
+                print("[ClaudeProductAnalyzer] ⚠️ JSON decode error: \(error)")
+                print("[ClaudeProductAnalyzer] Raw JSON: \(cleanedJSON)")
+                return nil
+            }
         } catch {
+            print("[ClaudeProductAnalyzer] ⚠️ Network error: \(error)")
             return nil
         }
     }

@@ -102,6 +102,6 @@ struct DietaryTag: View {
             )
         }
         .buttonStyle(ScaleButtonStyle())
-        .animation(.easeInOut(duration: 0.2), value: isSelected)
+        .animation(.snappy(duration: 0.15), value: isSelected)
     }
 }
