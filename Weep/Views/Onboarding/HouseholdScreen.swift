@@ -53,7 +53,7 @@ struct HouseholdScreen: View {
                                 RoundedRectangle(cornerRadius: 10, style: .continuous)
                                     .fill(viewModel.hasPets ? WeepColor.accentLight : WeepColor.background)
                             )
-                            .animation(.easeInOut(duration: 0.2), value: viewModel.hasPets)
+                            .animation(.snappy(duration: 0.15), value: viewModel.hasPets)
 
                         Text("Furry family members?")
                             .font(WeepFont.body())
@@ -131,7 +131,7 @@ struct CounterRow: View {
                     .foregroundColor(WeepColor.textPrimary)
                     .frame(width: 32)
                     .contentTransition(.numericText())
-                    .animation(.easeInOut(duration: 0.2), value: count)
+                    .animation(.snappy(duration: 0.15), value: count)
 
                 Button {
                     WeepHaptics.light()

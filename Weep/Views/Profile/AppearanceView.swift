@@ -57,7 +57,7 @@ struct AppearanceView: View {
 
         return Button {
             WeepHaptics.selection()
-            withAnimation(.easeInOut(duration: 0.2)) {
+            withAnimation(.snappy(duration: 0.15)) {
                 themeManager.currentTheme = theme
             }
         } label: {

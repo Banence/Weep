@@ -9,10 +9,12 @@
 /* Begin PBXBuildFile section */
 		7886F7092F7573CB00BAAA96 /* ClerkKit in Frameworks */ = {isa = PBXBuildFile; productRef = 7886F7082F7573CB00BAAA96 /* ClerkKit */; };
 		7886F70B2F7573CB00BAAA96 /* ClerkKitUI in Frameworks */ = {isa = PBXBuildFile; productRef = 7886F70A2F7573CB00BAAA96 /* ClerkKitUI */; };
+		7886F7102F7600AA00BAAA96 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = 7886F70F2F7600AA00BAAA96 /* Supabase */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		7886F6992F75219300BAAA96 /* Weep.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Weep.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		7886F7202F7700AA00BAAA96 /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -30,6 +32,7 @@
 			files = (
 				7886F7092F7573CB00BAAA96 /* ClerkKit in Frameworks */,
 				7886F70B2F7573CB00BAAA96 /* ClerkKitUI in Frameworks */,
+				7886F7102F7600AA00BAAA96 /* Supabase in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -39,6 +42,7 @@
 		7886F6902F75219300BAAA96 = {
 			isa = PBXGroup;
 			children = (
+				7886F7202F7700AA00BAAA96 /* Secrets.xcconfig */,
 				7886F69B2F75219300BAAA96 /* Weep */,
 				7886F69A2F75219300BAAA96 /* Products */,
 			);
@@ -74,6 +78,7 @@
 			packageProductDependencies = (
 				7886F7082F7573CB00BAAA96 /* ClerkKit */,
 				7886F70A2F7573CB00BAAA96 /* ClerkKitUI */,
+				7886F70F2F7600AA00BAAA96 /* Supabase */,
 			);
 			productName = Weep;
 			productReference = 7886F6992F75219300BAAA96 /* Weep.app */;
@@ -105,6 +110,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				7886F7072F7573CB00BAAA96 /* XCRemoteSwiftPackageReference "clerk-ios" */,
+				7886F70E2F7600AA00BAAA96 /* XCRemoteSwiftPackageReference "supabase-swift" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 7886F69A2F75219300BAAA96 /* Products */;
@@ -258,6 +264,7 @@
 		};
 		7886F6A52F75219400BAAA96 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 7886F7202F7700AA00BAAA96 /* Secrets.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -292,6 +299,7 @@
 		};
 		7886F6A62F75219400BAAA96 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 7886F7202F7700AA00BAAA96 /* Secrets.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -356,6 +364,14 @@
 				minimumVersion = 1.0.8;
 			};
 		};
+		7886F70E2F7600AA00BAAA96 /* XCRemoteSwiftPackageReference "supabase-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/supabase/supabase-swift";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.0.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -368,6 +384,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 7886F7072F7573CB00BAAA96 /* XCRemoteSwiftPackageReference "clerk-ios" */;
 			productName = ClerkKitUI;
+		};
+		7886F70F2F7600AA00BAAA96 /* Supabase */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 7886F70E2F7600AA00BAAA96 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Supabase;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

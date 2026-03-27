@@ -2,7 +2,7 @@ import AVFoundation
 import UIKit
 
 @Observable
-final class CameraService: NSObject, @preconcurrency AVCapturePhotoCaptureDelegate {
+final class CameraService: NSObject, AVCapturePhotoCaptureDelegate {
     nonisolated(unsafe) let session = AVCaptureSession()
     private let photoOutput = AVCapturePhotoOutput()
     private var continuation: CheckedContinuation<UIImage?, Never>?

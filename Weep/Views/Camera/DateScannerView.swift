@@ -74,8 +74,6 @@ struct DateScannerView: UIViewControllerRepresentable {
                 allTexts.append(text.transcript)
             }
 
-            // Show what's being scanned
-            let combined = allTexts.joined(separator: " | ")
             Task { @MainActor in
                 self.parent.scannedText = allTexts.last ?? ""
             }

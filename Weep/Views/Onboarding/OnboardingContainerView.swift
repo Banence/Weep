@@ -20,17 +20,13 @@ struct OnboardingContainerView: View {
                 screenContent
                     .frame(maxHeight: .infinity)
                     .id(viewModel.currentStep)
-                    .transition(.asymmetric(
-                        insertion: .move(edge: .trailing).combined(with: .opacity),
-                        removal: .move(edge: .leading).combined(with: .opacity)
-                    ))
+                    .transition(.push(from: .trailing))
             }
         }
-        .animation(.easeInOut(duration: 0.3), value: viewModel.currentStep)
+        .animation(.snappy(duration: 0.3), value: viewModel.currentStep)
         .onAppear {
             viewModel.restoreFromUserDefaults()
 
-            // If user already has a Clerk session, skip sign-up and go to greeting or beyond
             if let user = clerk.user {
                 if viewModel.currentStep == .welcome || viewModel.currentStep == .signUp {
                     let name = user.firstName
@@ -49,14 +45,12 @@ struct OnboardingContainerView: View {
 
             HStack {
                 Button {
-                    withAnimation(.easeInOut(duration: 0.3)) {
-                        if viewModel.firstScanSubView {
-                            viewModel.firstScanSubView = false
-                        } else if viewModel.currentStep == .permissions && viewModel.permissionSubStep > 0 {
-                            viewModel.permissionSubStep = 0
-                        } else {
-                            viewModel.goBack()
-                        }
+                    if viewModel.firstScanSubView {
+                        viewModel.firstScanSubView = false
+                    } else if viewModel.currentStep == .permissions && viewModel.permissionSubStep > 0 {
+                        viewModel.permissionSubStep = 0
+                    } else {
+                        viewModel.goBack()
                     }
                 } label: {
                     Image(systemName: "chevron.left")
@@ -69,9 +63,7 @@ struct OnboardingContainerView: View {
 
                 if viewModel.currentStep.canSkip {
                     Button {
-                        withAnimation(.easeInOut(duration: 0.3)) {
-                            viewModel.skip()
-                        }
+                        viewModel.skip()
                     } label: {
                         Text("Skip")
                             .font(WeepFont.caption(15))
@@ -116,8 +108,6 @@ struct OnboardingContainerView: View {
     }
 
     private func advance() {
-        withAnimation(.easeInOut(duration: 0.3)) {
-            viewModel.advance()
-        }
+        viewModel.advance()
     }
 }

@@ -77,7 +77,7 @@ struct KitchenZonesScreen: View {
 
                         Button {
                             WeepHaptics.light()
-                            withAnimation(.easeInOut(duration: 0.25)) {
+                            withAnimation(.snappy(duration: 0.2)) {
                                 isAddingZone = true
                             }
                             DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
@@ -113,7 +113,7 @@ struct KitchenZonesScreen: View {
         WeepHaptics.success()
         viewModel.storageZones.append(StorageZone(id: UUID(), name: name, icon: "tray.fill", isEnabled: true))
         newZoneName = ""
-        withAnimation(.easeInOut(duration: 0.25)) { isAddingZone = false }
+        withAnimation(.snappy(duration: 0.2)) { isAddingZone = false }
     }
 }
 

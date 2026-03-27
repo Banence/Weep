@@ -1,5 +1,6 @@
 import SwiftUI
 import ClerkKit
+import Supabase
 import PhotosUI
 
 struct AccountDetailView: View {
@@ -15,7 +16,7 @@ struct AccountDetailView: View {
     @State private var isSavingName = false
     @State private var nameError: String?
 
-    private var user: User? { clerk.user }
+    private var user: ClerkKit.User? { clerk.user }
 
     var body: some View {
         NavigationStack {
@@ -142,7 +143,7 @@ struct AccountDetailView: View {
                         editFirstName = user?.firstName ?? ""
                         editLastName = user?.lastName ?? ""
                         nameError = nil
-                        withAnimation(.easeInOut(duration: 0.2)) { isEditingName = true }
+                        withAnimation(.snappy(duration: 0.15)) { isEditingName = true }
                     } label: {
                         Text("Edit")
                             .font(.system(size: 15, weight: .medium))
@@ -189,7 +190,7 @@ struct AccountDetailView: View {
                     .transition(.opacity)
             }
         }
-        .animation(.easeInOut(duration: 0.2), value: isEditingName)
+        .animation(.snappy(duration: 0.15), value: isEditingName)
     }
 
     // MARK: - Connected Accounts
@@ -348,7 +349,18 @@ struct AccountDetailView: View {
                 firstName: first.isEmpty ? nil : first,
                 lastName: last.isEmpty ? nil : last
             ))
-            withAnimation(.easeInOut(duration: 0.2)) { isEditingName = false }
+
+            // Sync display name to Supabase profile
+            if let userId = user?.id {
+                let displayName = [first, last].filter { !$0.isEmpty }.joined(separator: " ")
+                _ = try? await SupabaseService.shared.client
+                    .from("profiles")
+                    .update(["display_name": displayName])
+                    .eq("user_id", value: userId)
+                    .execute()
+            }
+
+            withAnimation(.snappy(duration: 0.15)) { isEditingName = false }
         } catch {
             nameError = "Failed to update name. Please try again."
         }

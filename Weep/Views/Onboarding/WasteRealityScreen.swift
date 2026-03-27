@@ -50,7 +50,7 @@ struct WasteRealityScreen: View {
                             .font(.system(size: 40, weight: .light))
                             .foregroundStyle(sliderIconColor)
                             .contentTransition(.symbolEffect(.replace))
-                            .animation(.easeInOut(duration: 0.3), value: sliderIcon)
+                            .animation(.snappy(duration: 0.25), value: sliderIcon)
 
                         Text(sliderLabel)
                             .font(.system(size: 20, weight: .semibold))
@@ -58,7 +58,7 @@ struct WasteRealityScreen: View {
                             .contentTransition(.numericText())
                     }
                     .frame(maxWidth: .infinity)
-                    .animation(.easeInOut(duration: 0.25), value: sliderLabel)
+                    .animation(.snappy(duration: 0.2), value: sliderLabel)
                     .staggeredAppear(delay: 0.2)
 
                     Spacer().frame(height: 32)
@@ -89,7 +89,7 @@ struct WasteRealityScreen: View {
                             .font(.system(size: 56, weight: .bold, design: .default))
                             .foregroundColor(WeepColor.textPrimary)
                             .contentTransition(.numericText())
-                            .animation(.easeInOut(duration: 0.2), value: Int(viewModel.estimatedMonthlyWasteCost))
+                            .animation(.snappy(duration: 0.15), value: Int(viewModel.estimatedMonthlyWasteCost))
 
                         Text("estimated monthly waste")
                             .font(WeepFont.caption(14))

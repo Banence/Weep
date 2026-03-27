@@ -1,5 +1,6 @@
 import SwiftUI
 import ClerkKit
+import Supabase
 
 struct ProfileView: View {
     @Environment(Clerk.self) private var clerk
@@ -10,31 +11,25 @@ struct ProfileView: View {
     @State private var showLogoutConfirmation = false
     @State private var isSigningOut = false
 
-    private var user: User? { clerk.user }
+    private var user: ClerkKit.User? { clerk.user }
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: 24) {
-                // Page title
-                HStack {
-                    Text("Profile")
-                        .font(.system(size: 34, weight: .bold))
-                        .foregroundStyle(Color(.label))
-                    Spacer()
+        NavigationStack {
+            ScrollView {
+                VStack(spacing: 24) {
+                    profileHeader
+
+                    generalSection
+
+                    dangerSection
+
+                    Spacer().frame(height: 100)
                 }
-                .padding(.top, 4)
-
-                profileHeader
-
-                generalSection
-
-                dangerSection
-
-                Spacer().frame(height: 100)
+                .padding(.horizontal, 20)
             }
-            .padding(.horizontal, 20)
+            .background(Color(.systemGroupedBackground).ignoresSafeArea())
+            .navigationTitle("Profile")
         }
-        .background(Color(.systemGroupedBackground).ignoresSafeArea())
         .sheet(isPresented: $showAccountSheet) {
             AccountDetailView()
         }
@@ -64,13 +59,19 @@ struct ProfileView: View {
             titleVisibility: .visible
         ) {
             Button("Delete Account", role: .destructive) {
-                // Clear local data FIRST (synchronous) before Clerk
-                // nulls the user and triggers routing changes
+                // Clear remote data first, then local
+                let userId = user?.id
                 UserDefaults.standard.removeObject(forKey: "weep_onboarding_state")
                 UserDefaults.standard.removeObject(forKey: "app_theme")
                 KitchenStore.shared.clearAll()
                 Task {
-                    try? await user?.delete()
+                    if let userId {
+                        let db = SupabaseService.shared.client
+                        _ = try? await db.from("food_items").delete().eq("user_id", value: userId).execute()
+                        _ = try? await db.from("profiles").delete().eq("user_id", value: userId).execute()
+                        await SupabaseService.deleteAllProductImages(userId: userId)
+                    }
+                    _ = try? await user?.delete()
                     try? await clerk.auth.signOut()
                 }
             }
