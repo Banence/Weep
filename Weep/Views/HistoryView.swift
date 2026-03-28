@@ -1,4 +1,5 @@
 import SwiftUI
+import Lottie
 
 enum HistoryFilter: String, CaseIterable {
     case all = "All"
@@ -135,12 +136,12 @@ struct HistoryView: View {
     // MARK: - Empty State
 
     private var emptyState: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: 16) {
             Spacer()
 
-            Image(systemName: "clock.arrow.circlepath")
-                .font(.system(size: 44, weight: .ultraLight))
-                .foregroundColor(Color(.tertiaryLabel))
+            LottieView(animation: .named("history"))
+                .looping()
+                .frame(width: 160, height: 160)
 
             Text("No history yet")
                 .font(.system(size: 20, weight: .bold))

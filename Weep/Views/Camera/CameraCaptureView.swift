@@ -396,12 +396,10 @@ struct CameraCaptureView: View {
 
                 Spacer()
 
-                // Scan frame with corner accents
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .strokeBorder(.white.opacity(0.5), lineWidth: 2)
-                    .frame(width: 300, height: 100)
-                    .overlay(cornerAccents(width: 300, height: 100))
-                    .overlay(ScanLineView())
+                // Scan frame
+                ScanFrameView()
+                    .frame(height: 100)
+                    .padding(.horizontal, 36)
                     .allowsHitTesting(false)
 
                 Spacer()
@@ -494,11 +492,9 @@ struct CameraCaptureView: View {
 
                 Spacer()
 
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .strokeBorder(.white.opacity(0.4), lineWidth: 2)
-                    .frame(width: 300, height: 120)
-                    .overlay(cornerAccents(width: 300, height: 120))
-                    .overlay(ScanLineView())
+                ScanFrameView()
+                    .frame(height: 120)
+                    .padding(.horizontal, 36)
 
                 Spacer()
 
@@ -818,73 +814,84 @@ struct CameraCaptureView: View {
         }
     }
 
-    private func cornerAccents(width: CGFloat, height: CGFloat) -> some View {
-        Canvas { context, size in
-            let len: CGFloat = 20
-            let lw: CGFloat = 3
-            let r: CGFloat = 4
-            let color = Color.white
-
-            // Top-left
-            var p = Path()
-            p.move(to: CGPoint(x: 0, y: len))
-            p.addLine(to: CGPoint(x: 0, y: r))
-            p.addQuadCurve(to: CGPoint(x: r, y: 0), control: .zero)
-            p.addLine(to: CGPoint(x: len, y: 0))
-            context.stroke(p, with: .color(color), lineWidth: lw)
-
-            // Top-right
-            var p2 = Path()
-            p2.move(to: CGPoint(x: size.width - len, y: 0))
-            p2.addLine(to: CGPoint(x: size.width - r, y: 0))
-            p2.addQuadCurve(to: CGPoint(x: size.width, y: r), control: CGPoint(x: size.width, y: 0))
-            p2.addLine(to: CGPoint(x: size.width, y: len))
-            context.stroke(p2, with: .color(color), lineWidth: lw)
-
-            // Bottom-right
-            var p3 = Path()
-            p3.move(to: CGPoint(x: size.width, y: size.height - len))
-            p3.addLine(to: CGPoint(x: size.width, y: size.height - r))
-            p3.addQuadCurve(to: CGPoint(x: size.width - r, y: size.height), control: CGPoint(x: size.width, y: size.height))
-            p3.addLine(to: CGPoint(x: size.width - len, y: size.height))
-            context.stroke(p3, with: .color(color), lineWidth: lw)
-
-            // Bottom-left
-            var p4 = Path()
-            p4.move(to: CGPoint(x: len, y: size.height))
-            p4.addLine(to: CGPoint(x: r, y: size.height))
-            p4.addQuadCurve(to: CGPoint(x: 0, y: size.height - r), control: CGPoint(x: 0, y: size.height))
-            p4.addLine(to: CGPoint(x: 0, y: size.height - len))
-            context.stroke(p4, with: .color(color), lineWidth: lw)
-        }
-        .frame(width: width, height: height)
-    }
 }
 
-// MARK: - Scan Line Animation
+// MARK: - Scan Frame View
 
-struct ScanLineView: View {
-    @State private var offset: CGFloat = -40
+struct ScanFrameView: View {
+    private let cornerRadius: CGFloat = 14
+    private let cornerLength: CGFloat = 28
+    private let lineWidth: CGFloat = 3
+    @State private var scanOffset: CGFloat = -0.4
 
     var body: some View {
-        Rectangle()
-            .fill(
-                LinearGradient(
-                    colors: [.clear, Color(hex: 0x34C759).opacity(0.5), .clear],
-                    startPoint: .leading,
-                    endPoint: .trailing
-                )
-            )
-            .frame(height: 2)
-            .offset(y: offset)
-            .clipShape(RoundedRectangle(cornerRadius: 12))
-            .onAppear {
-                withAnimation(
-                    .easeInOut(duration: 2.0)
-                    .repeatForever(autoreverses: true)
-                ) {
-                    offset = 40
-                }
+        GeometryReader { geo in
+            let rect = CGRect(origin: .zero, size: geo.size)
+
+            ZStack {
+                // Subtle full border
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .strokeBorder(.white.opacity(0.2), lineWidth: 1)
+
+                // Corner accents — 4 separate stroked paths clipped to corners
+                cornerPath(rect: rect, corner: .topLeft)
+                cornerPath(rect: rect, corner: .topRight)
+                cornerPath(rect: rect, corner: .bottomRight)
+                cornerPath(rect: rect, corner: .bottomLeft)
+
+                // Scan line
+                Rectangle()
+                    .fill(
+                        LinearGradient(
+                            colors: [.clear, WeepColor.accent.opacity(0.5), .clear],
+                            startPoint: .leading, endPoint: .trailing
+                        )
+                    )
+                    .frame(height: 2)
+                    .offset(y: geo.size.height * scanOffset)
+                    .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
             }
+        }
+        .onAppear {
+            withAnimation(.easeInOut(duration: 2.0).repeatForever(autoreverses: true)) {
+                scanOffset = 0.4
+            }
+        }
+    }
+
+    private enum Corner { case topLeft, topRight, bottomRight, bottomLeft }
+
+    private func cornerPath(rect: CGRect, corner: Corner) -> some View {
+        Path { path in
+            let r = cornerRadius
+            let l = cornerLength
+
+            switch corner {
+            case .topLeft:
+                path.move(to: CGPoint(x: 0, y: l))
+                path.addLine(to: CGPoint(x: 0, y: r))
+                path.addArc(center: CGPoint(x: r, y: r), radius: r, startAngle: .degrees(180), endAngle: .degrees(270), clockwise: false)
+                path.addLine(to: CGPoint(x: l, y: 0))
+
+            case .topRight:
+                path.move(to: CGPoint(x: rect.width - l, y: 0))
+                path.addLine(to: CGPoint(x: rect.width - r, y: 0))
+                path.addArc(center: CGPoint(x: rect.width - r, y: r), radius: r, startAngle: .degrees(270), endAngle: .degrees(0), clockwise: false)
+                path.addLine(to: CGPoint(x: rect.width, y: l))
+
+            case .bottomRight:
+                path.move(to: CGPoint(x: rect.width, y: rect.height - l))
+                path.addLine(to: CGPoint(x: rect.width, y: rect.height - r))
+                path.addArc(center: CGPoint(x: rect.width - r, y: rect.height - r), radius: r, startAngle: .degrees(0), endAngle: .degrees(90), clockwise: false)
+                path.addLine(to: CGPoint(x: rect.width - l, y: rect.height))
+
+            case .bottomLeft:
+                path.move(to: CGPoint(x: l, y: rect.height))
+                path.addLine(to: CGPoint(x: r, y: rect.height))
+                path.addArc(center: CGPoint(x: r, y: rect.height - r), radius: r, startAngle: .degrees(90), endAngle: .degrees(180), clockwise: false)
+                path.addLine(to: CGPoint(x: 0, y: rect.height - l))
+            }
+        }
+        .stroke(.white, lineWidth: lineWidth)
     }
 }

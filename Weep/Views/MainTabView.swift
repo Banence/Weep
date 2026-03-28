@@ -21,8 +21,8 @@ struct MainTabView: View {
                     HomeView()
                 }
 
-                Tab("Planner", systemImage: "book.fill", value: .planner) {
-                    MealPlannerPlaceholderView()
+                Tab("Planner", systemImage: "frying.pan.fill", value: .planner) {
+                    MealPlannerView()
                 }
 
                 Tab("History", systemImage: "clock.arrow.circlepath", value: .history) {
@@ -102,26 +102,3 @@ struct MainTabView: View {
     }
 }
 
-// MARK: - Placeholder Views
-
-struct MealPlannerPlaceholderView: View {
-    var body: some View {
-        ZStack {
-            WeepColor.background.ignoresSafeArea()
-
-            VStack(spacing: 16) {
-                Image(systemName: "book.fill")
-                    .font(.system(size: 48, weight: .ultraLight))
-                    .foregroundColor(WeepColor.iconMuted)
-
-                Text("Meal Planner")
-                    .font(WeepFont.headline(20))
-                    .foregroundColor(WeepColor.textPrimary)
-
-                Text("Plan your meals to reduce food waste")
-                    .font(WeepFont.caption(15))
-                    .foregroundColor(WeepColor.textSecondary)
-            }
-        }
-    }
-}

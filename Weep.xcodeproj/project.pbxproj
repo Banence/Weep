@@ -10,6 +10,7 @@
 		7886F7092F7573CB00BAAA96 /* ClerkKit in Frameworks */ = {isa = PBXBuildFile; productRef = 7886F7082F7573CB00BAAA96 /* ClerkKit */; };
 		7886F70B2F7573CB00BAAA96 /* ClerkKitUI in Frameworks */ = {isa = PBXBuildFile; productRef = 7886F70A2F7573CB00BAAA96 /* ClerkKitUI */; };
 		7886F7102F7600AA00BAAA96 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = 7886F70F2F7600AA00BAAA96 /* Supabase */; };
+		7886F7302F7800BB00BAAA96 /* Lottie in Frameworks */ = {isa = PBXBuildFile; productRef = 7886F72F2F7800BB00BAAA96 /* Lottie */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -33,6 +34,7 @@
 				7886F7092F7573CB00BAAA96 /* ClerkKit in Frameworks */,
 				7886F70B2F7573CB00BAAA96 /* ClerkKitUI in Frameworks */,
 				7886F7102F7600AA00BAAA96 /* Supabase in Frameworks */,
+				7886F7302F7800BB00BAAA96 /* Lottie in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -79,6 +81,7 @@
 				7886F7082F7573CB00BAAA96 /* ClerkKit */,
 				7886F70A2F7573CB00BAAA96 /* ClerkKitUI */,
 				7886F70F2F7600AA00BAAA96 /* Supabase */,
+				7886F72F2F7800BB00BAAA96 /* Lottie */,
 			);
 			productName = Weep;
 			productReference = 7886F6992F75219300BAAA96 /* Weep.app */;
@@ -111,6 +114,7 @@
 			packageReferences = (
 				7886F7072F7573CB00BAAA96 /* XCRemoteSwiftPackageReference "clerk-ios" */,
 				7886F70E2F7600AA00BAAA96 /* XCRemoteSwiftPackageReference "supabase-swift" */,
+				7886F72E2F7800BB00BAAA96 /* XCRemoteSwiftPackageReference "lottie-ios" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 7886F69A2F75219300BAAA96 /* Products */;
@@ -372,6 +376,14 @@
 				minimumVersion = 2.0.0;
 			};
 		};
+		7886F72E2F7800BB00BAAA96 /* XCRemoteSwiftPackageReference "lottie-ios" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/airbnb/lottie-ios";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 4.0.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -389,6 +401,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 7886F70E2F7600AA00BAAA96 /* XCRemoteSwiftPackageReference "supabase-swift" */;
 			productName = Supabase;
+		};
+		7886F72F2F7800BB00BAAA96 /* Lottie */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 7886F72E2F7800BB00BAAA96 /* XCRemoteSwiftPackageReference "lottie-ios" */;
+			productName = Lottie;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

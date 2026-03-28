@@ -158,6 +158,7 @@ enum KitchenFilter: String, CaseIterable {
 
 struct HomeView: View {
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(Clerk.self) private var clerk
     @State private var store = KitchenStore.shared
     @State private var selectedItem: FoodItem?
     @State private var selectedFilter: KitchenFilter = .all
@@ -251,7 +252,7 @@ struct HomeView: View {
                 }
             }
             .background(WeepColor.background)
-            .navigationTitle("My Kitchen")
+            .navigationTitle(greetingTitle)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Image(uiImage: UIImage(named: colorScheme == .dark ? "white-trans" : "black-trans") ?? UIImage())
@@ -392,6 +393,21 @@ struct HomeView: View {
             return "\(startMonth) \(startDay)–\(endDay)"
         }
         return "\(startMonth) \(startDay) – \(endMonth) \(endDay)"
+    }
+
+    private var greetingTitle: String {
+        if let name = clerk.user?.firstName, !name.isEmpty {
+            let hour = Calendar.current.component(.hour, from: Date())
+            let greeting: String
+            switch hour {
+            case 5..<12: greeting = "Good morning"
+            case 12..<17: greeting = "Good afternoon"
+            case 17..<22: greeting = "Good evening"
+            default: greeting = "Good night"
+            }
+            return "\(greeting), \(name)"
+        }
+        return "My Kitchen"
     }
 
     // MARK: - Overview Card
@@ -549,10 +565,6 @@ struct HomeView: View {
                 }
             }
         }
-    }
-
-    private func filterLabel(_ filter: KitchenFilter) -> String {
-        filter.rawValue
     }
 
     // MARK: - Empty State

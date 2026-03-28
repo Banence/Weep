@@ -47,9 +47,6 @@ struct ClaudeProductAnalyzer {
            !key.isEmpty, key.hasPrefix("sk-") {
             return key
         }
-        // Debug: log what Info.plist actually contains
-        let raw = Bundle.main.object(forInfoDictionaryKey: "ANTHROPIC_API_KEY") as? String ?? "(nil)"
-        print("[ClaudeProductAnalyzer] Info.plist ANTHROPIC_API_KEY = '\(raw.prefix(20))...' (length: \(raw.count))")
         return ""
     }
     private static let endpoint = "https://api.anthropic.com/v1/messages"
