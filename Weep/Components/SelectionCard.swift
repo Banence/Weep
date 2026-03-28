@@ -40,7 +40,7 @@ struct SelectionCard: View {
                     .overlay(
                         Image(systemName: "checkmark")
                             .font(.system(size: 12, weight: .bold))
-                            .foregroundColor(.white)
+                            .foregroundColor(Color(.systemBackground))
                             .opacity(isSelected ? 1 : 0)
                     )
             }

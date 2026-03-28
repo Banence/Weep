@@ -109,7 +109,7 @@ class WeepAppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenter
                     content: content,
                     trigger: trigger
                 )
-                try? await center.add(request)
+                try? await UNUserNotificationCenter.current().add(request)
             }
 
         default:
