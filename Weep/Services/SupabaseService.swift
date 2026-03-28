@@ -42,14 +42,27 @@ struct SupabaseService {
         }
     }
 
-    /// Download product image from Supabase Storage.
+    /// Download product image — supports both Supabase Storage paths and external URLs.
     static func downloadProductImage(path: String) async -> Data? {
+        // External URL (https://...)
+        if path.hasPrefix("http://") || path.hasPrefix("https://") {
+            guard let url = URL(string: path) else { return nil }
+            do {
+                let (data, _) = try await URLSession.shared.data(from: url)
+                return data
+            } catch {
+                print("[SupabaseStorage] URL download failed: \(error.localizedDescription)")
+                return nil
+            }
+        }
+
+        // Supabase Storage path
         do {
             return try await shared.client.storage
                 .from(imageBucket)
                 .download(path: path)
         } catch {
-            print("[SupabaseStorage] Download failed: \(error)")
+            print("[SupabaseStorage] Storage download failed: \(error)")
             return nil
         }
     }
